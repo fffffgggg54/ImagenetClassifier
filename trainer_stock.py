@@ -38,29 +38,29 @@ FLAGS['trainSetSize'] = 0.9
 
 # env
 FLAGS['num_tpu_cores'] = 8
-FLAGS['rootPath'] = "./imagenet/"
+FLAGS['rootPath'] = "/mnt/disks/persist/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 # dataloader
-FLAGS['num_workers'] = 36
+FLAGS['num_workers'] = 94
 
 
 # traincycle
-FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 256
+FLAGS['num_epochs'] = 300
+FLAGS['batch_size'] = 32
 FLAGS['gradient_accumulation_iterations'] = 4
 
 # hparams
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 6
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
 # util
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
@@ -77,8 +77,9 @@ classes = None
 def getData():
     startTime = time.time()
 
-    #trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
-    #testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
+    trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
+    testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
+    '''
     dataset = torchvision.datasets.Food101(
         "./",
         download=True,
@@ -97,7 +98,7 @@ def getData():
         ],
         generator=torch.Generator().manual_seed(42)
     ) # split dataset
-
+    '''
 
     
     global classes
@@ -112,10 +113,10 @@ def getData():
 
 
 def modelSetup(classes):
-    #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, len(classes))
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
+    #model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
+    #num_ftrs = model.fc.in_features
+    #model.fc = nn.Linear(num_ftrs, len(classes))
 
     if FLAGS['finetune'] == True:
         for param in model.parameters():
