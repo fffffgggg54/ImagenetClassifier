@@ -145,8 +145,7 @@ def modelSetup(classes):
         for param in model.parameters():
             param.requires_grad = True
                 
-    if hasTPU == True:
-        model = xmp.MpModelWrapper(model)
+    
         
     return model
     
@@ -322,8 +321,9 @@ def main():
     
     model = modelSetup(classes)
     print(model)
+    wrappedModel = xmp.MpModelWrapper(model)
 
-    xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
+    xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, wrappedModel,), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
     
 
 
