@@ -123,7 +123,8 @@ def getData():
 
 
 def modelSetup(classes):
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
+    #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
+    model = timm.create_model('convmixer_1536_20', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     #model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
     #num_ftrs = model.fc.in_features
     #model.fc = nn.Linear(num_ftrs, len(classes))
@@ -276,7 +277,7 @@ def trainCycle(image_datasets, model):
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
                         loss.backward()
-                        if(i % FLAGS['gradient_accumulation_iterations'] == 0):
+                        if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                             nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                             xm.optimizer_step(optimizer)
                             optimizer.zero_grad()
