@@ -204,9 +204,9 @@ def trainCycle(image_datasets, model):
                 
                 
             if phase == 'val':
-                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                if torch_xla.core.xla_model.is_master_ordinal(local=False) == True:
-                    torch.save(model.to('cpu').state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                #modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+                #if torch_xla.core.xla_model.is_master_ordinal(local=False) == True:
+                #    torch.save(model.to('cpu').state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True):
