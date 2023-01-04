@@ -102,7 +102,7 @@ def getData():
 
     
     global classes
-    classes = {classIndex : className for classIndex, className in enumerate(dataset.classes)}
+    classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
     #classes = {classIndex : className for classIndex, className in enumerate(dataset.categories)}
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     
