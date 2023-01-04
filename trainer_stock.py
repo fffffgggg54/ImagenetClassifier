@@ -23,7 +23,7 @@ import gc
 import timm
 
 import timm.models.layers.ml_decoder as ml_decoder
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLoss
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
@@ -188,7 +188,9 @@ def trainCycle(image_datasets, model):
     
 
     #criterion = nn.BCEWithLogitsLoss(reduction='sum')
-    criterion = nn.CrossEntropyLoss(reduction='sum')
+    #criterion = nn.CrossEntropyLoss(reduction='sum')
+    #criterion = AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0)
+    criterion = SoftTargetCrossEntropy()
 
     optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
