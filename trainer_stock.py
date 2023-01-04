@@ -23,7 +23,7 @@ import gc
 import timm
 
 import timm.models.layers.ml_decoder as ml_decoder
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossMultiLabel
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
@@ -124,7 +124,7 @@ def getData():
 
 def modelSetup(classes):
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    model = timm.create_model('mobilevitv2_200_384_in22ft1k', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
+    model = timm.create_model('resnet18', pretrained=False, num_classes=len(classes))
     #model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
     #num_ftrs = model.fc.in_features
     #model.fc = nn.Linear(num_ftrs, len(classes))
@@ -187,12 +187,12 @@ def trainCycle(image_datasets, model):
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
 
     print("initialized training, time spent: " + str(time.time() - startTime))
-    
+        
 
     #criterion = nn.BCEWithLogitsLoss(reduction='sum')
     #criterion = nn.CrossEntropyLoss(reduction='sum')
-    #criterion = AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0)
-    criterion = SoftTargetCrossEntropy()
+    criterion = AsymmetricLossMultiLabel(gamma_neg=0, gamma_pos=0, clip=0.0)
+    #criterion = SoftTargetCrossEntropy()
 
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
