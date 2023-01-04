@@ -193,7 +193,27 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
 
-
+        image_datasets['train'].transform = transforms.Compose([
+            transforms.Resize((448,448)),
+            #transforms.Resize((256)),
+            transforms.RandomHorizontalFlip(),
+            #RandomResizedCropAndInterpolation(size=224),
+            transforms.TrivialAugmentWide(),
+            transforms.ToTensor(),
+            #RandomErasing(probability=0.5, mode='pixel', device='cpu'),
+            #transforms.GaussianBlur(kernel_size=(7, 7), sigma=(2, 10)),
+            #transforms.ToPILImage(),
+            #transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ])
+        
+        image_datasets['val'].transform = transforms.Compose([
+            transforms.Resize((448,448)),
+            #transforms.Resize((256,256)),
+            transforms.ToTensor(),
+            #transforms.RandomCrop(224),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
         
         for phase in ['train', 'val']:
         
