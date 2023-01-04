@@ -174,7 +174,8 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = criterion = nn.BCEWithLogitsLoss(reduction='sum')
+    #criterion = nn.BCEWithLogitsLoss(reduction='sum')
+    criterion = nn.CrossEntropyLoss(reduction='sum')
 
     optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -237,7 +238,8 @@ def trainCycle(image_datasets, model):
                     correct += sum(preds == tagBatch)
                     tagBatch = torch.eye(len(classes), device=device)[tagBatch]
 
-                    loss = criterion(outputs, tagsOneHot)
+                    #loss = criterion(outputs, tagsOneHot)
+                    loss = criterion(outputs, tagBatch)
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
