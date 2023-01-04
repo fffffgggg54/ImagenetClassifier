@@ -58,7 +58,7 @@ FLAGS['num_workers'] = 94
 # traincycle
 FLAGS['num_epochs'] = 300
 FLAGS['batch_size'] = 16
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['gradient_accumulation_iterations'] = 128
 
 # hparams
 FLAGS['base_learning_rate'] = 3e-3
