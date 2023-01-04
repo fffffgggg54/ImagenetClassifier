@@ -20,6 +20,15 @@ import numpy as np
 import time
 import glob
 import gc
+import timm
+
+import timm.models.layers.ml_decoder as ml_decoder
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.data.random_erasing import RandomErasing
+from timm.data.auto_augment import rand_augment_transform
+from timm.data.transforms import RandomResizedCropAndInterpolation
+from timm.data.mixup import FastCollateMixup, Mixup
+
 
 import torch_xla
 import torch_xla.core.xla_model as xm
@@ -103,6 +112,7 @@ def getData():
     
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
+    #classes = {classIndex : className for classIndex, className in enumerate(dataset.classes)}
     #classes = {classIndex : className for classIndex, className in enumerate(dataset.categories)}
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     
