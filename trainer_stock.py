@@ -104,7 +104,7 @@ def getData():
 
 def modelSetup(classes):
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    model = torchvision.models.resnet18(pretrained=True)
+    model = torchvision.models.resnet18(weights=ResNet18_Weights.DEFAULT)
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, len(classes))
 
@@ -214,7 +214,7 @@ def trainCycle(image_datasets, model):
                     print("skipping...")
                     break;
 
-            loaderIterable = enumerate(pl.ParallelLoader(dataloaders[phase], [device]))
+            loaderIterable = enumerate(pl.ParallelLoader(dataloaders[phase], [device]).per_device_loader(device))
             for i, (images, tags) in loaderIterable:
                 
                 
