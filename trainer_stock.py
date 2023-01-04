@@ -98,6 +98,20 @@ def getData():
     #classes = {classIndex : className for classIndex, className in enumerate(dataset.classes)}
     classes = {classIndex : className for classIndex, className in enumerate(dataset.categories)}
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
+    
+    
+    image_datasets['train'].transform = transforms.Compose([
+        transforms.Resize((224,224)),
+        transforms.TrivialAugmentWide(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+    ])
+        
+    image_datasets['val'].transform = transforms.Compose([
+        transforms.Resize((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
     return image_datasets
 
 
@@ -181,18 +195,7 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
 
-        image_datasets['train'].transform = transforms.Compose([
-            transforms.Resize((224,224)),
-            transforms.TrivialAugmentWide(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        ])
-        
-        image_datasets['val'].transform = transforms.Compose([
-            transforms.Resize((224,224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+
         
         for phase in ['train', 'val']:
         
