@@ -81,7 +81,13 @@ def getData():
     #testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
     dataset = torchvision.datasets.Caltech101(
         "./",
-        download=True
+        download=True,
+        transform = transforms.Compose([
+            transforms.Resize((224,224)),
+            transforms.TrivialAugmentWide(),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ])
     )
     trainSet, testSet = torch.utils.data.random_split(
         dataset,
@@ -100,18 +106,7 @@ def getData():
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     
     
-    image_datasets['train'].transform = transforms.Compose([
-        transforms.Resize((224,224)),
-        transforms.TrivialAugmentWide(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-    ])
-        
-    image_datasets['val'].transform = transforms.Compose([
-        transforms.Resize((224,224)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+
     return image_datasets
 
 
