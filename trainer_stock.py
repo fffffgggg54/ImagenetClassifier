@@ -52,13 +52,13 @@ FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 # dataloader
-FLAGS['num_workers'] = 94
+FLAGS['num_workers'] = 11
 
 
 # traincycle
 FLAGS['num_epochs'] = 300
-FLAGS['batch_size'] = 32
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 16
+FLAGS['gradient_accumulation_iterations'] = 16
 
 # hparams
 FLAGS['base_learning_rate'] = 3e-3
