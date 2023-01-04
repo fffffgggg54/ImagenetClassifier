@@ -79,7 +79,7 @@ def getData():
 
     #trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
     #testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
-    dataset = torchvision.datasets.Caltech101(
+    dataset = torchvision.datasets.Food101(
         "./",
         download=True,
         transform = transforms.Compose([
