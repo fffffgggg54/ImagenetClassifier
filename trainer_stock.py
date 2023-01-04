@@ -37,13 +37,13 @@ FLAGS = {}
 FLAGS['trainSetSize'] = 0.9
 
 # env
-FLAGS['num_tpu_cores'] = 1
+FLAGS['num_tpu_cores'] = 8
 FLAGS['rootPath'] = "../data/"
 FLAGS['imageRoot'] = '../input/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC/'
 FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 # dataloader
-FLAGS['num_workers'] = 11
+FLAGS['num_workers'] = 36
 
 
 # traincycle
