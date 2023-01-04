@@ -217,7 +217,7 @@ def trainCycle(image_datasets, model):
                 
                 
 
-                imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
+                imageBatch = images.to(device, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
                 tagsOneHot = torch.nn.functional.one_hot(tags, num_classes = len(classes)).to(device, non_blocking=True)
                 
