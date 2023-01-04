@@ -123,7 +123,7 @@ def getData():
 
 
 def modelSetup(classes):
-    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
+    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     #model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
     #num_ftrs = model.fc.in_features
     #model.fc = nn.Linear(num_ftrs, len(classes))
