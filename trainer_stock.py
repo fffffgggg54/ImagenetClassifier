@@ -141,6 +141,9 @@ def modelSetup(classes):
         if hasattr(model, "head_dist"):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
+    else:
+        for param in model.parameters():
+            param.requires_grad = True
                 
     if hasTPU == True:
         model = xmp.MpModelWrapper(model)
@@ -192,9 +195,9 @@ def trainCycle(image_datasets, model):
     #criterion = AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0)
     criterion = SoftTargetCrossEntropy()
 
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=lr, steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
 
     xm.master_print(("starting training"))
     
