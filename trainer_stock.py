@@ -38,8 +38,8 @@ FLAGS['trainSetSize'] = 0.9
 
 # env
 FLAGS['num_tpu_cores'] = 8
-FLAGS['rootPath'] = "../data/"
-FLAGS['imageRoot'] = '../input/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC/'
+FLAGS['rootPath'] = "./imagenet/"
+FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 # dataloader
@@ -155,6 +155,7 @@ def trainCycle(image_datasets, model):
             batch_size=FLAGS['batch_size'], 
             sampler = samplers[x], 
             num_workers=FLAGS['num_workers'], 
+            persistent_workers = True,
             prefetch_factor=2, 
             drop_last=True,
             generator=torch.Generator().manual_seed(41)
