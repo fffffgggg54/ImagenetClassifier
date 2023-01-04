@@ -262,7 +262,7 @@ def trainCycle(image_datasets, model):
                 
             if phase == 'val':
                 print(f'top-1: {100 * (correct/samples)}')
-        
+                
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
