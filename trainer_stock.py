@@ -191,8 +191,9 @@ def trainCycle(image_datasets, model):
 
     #criterion = nn.BCEWithLogitsLoss(reduction='sum')
     #criterion = nn.CrossEntropyLoss(reduction='sum')
-    criterion = AsymmetricLossMultiLabel(gamma_neg=0, gamma_pos=0, clip=0.0)
+    #criterion = AsymmetricLossMultiLabel(gamma_neg=0, gamma_pos=0, clip=0.0)
     #criterion = SoftTargetCrossEntropy()
+    criterion = nn.NLLLoss()
 
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -257,7 +258,7 @@ def trainCycle(image_datasets, model):
 
                 imageBatch = images.to(device, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
-                tagsOneHot = torch.nn.functional.one_hot(tags, num_classes = len(classes)).to(device, non_blocking=True)
+                #tagsOneHot = torch.nn.functional.one_hot(tags, num_classes = len(classes)).to(device, non_blocking=True)
                 
                 
                 
