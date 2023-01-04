@@ -52,7 +52,7 @@ FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 # dataloader
-FLAGS['num_workers'] = 11
+FLAGS['num_workers'] = 94
 
 
 # traincycle
