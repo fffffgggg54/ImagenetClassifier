@@ -29,6 +29,7 @@ from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
 from timm.data.mixup import FastCollateMixup, Mixup
 
+import SLaK
 
 import torch_xla
 import torch_xla.core.xla_model as xm
@@ -124,7 +125,8 @@ def getData():
 
 def modelSetup(classes):
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    model = timm.create_model('convnext_small', pretrained=False, num_classes=len(classes))
+    #model = timm.create_model('convnext_small', pretrained=False, num_classes=len(classes))
+    model = SLaK.SLaK_small()
     #model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
     #num_ftrs = model.fc.in_features
     #model.fc = nn.Linear(num_ftrs, len(classes))
