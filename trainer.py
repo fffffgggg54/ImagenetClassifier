@@ -155,14 +155,14 @@ def getData():
     ])
     
     imagenet_train = datasets.load_dataset('imagenet-1k', split='train', streaming=True) \
-        .with_format("torch") \
         .map(transformsCallable(trainTransforms)) \
-        .shuffle(buffer_size=1000, seed=42)
+        .shuffle(buffer_size=1000, seed=42) \
+        .with_format("torch")
 
     imagenet_val = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
-        .with_format("torch") \
         .map(transformsCallable(valTransforms)) \
-        .shuffle(buffer_size=1000, seed=42)
+        .shuffle(buffer_size=1000, seed=42) \
+        .with_format("torch")
 
 
     
@@ -288,7 +288,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    #dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
+    dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     
     device = accelerator.device
 
@@ -399,7 +399,7 @@ def trainCycle(image_datasets, model):
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
-                    print('[%d/%d][%d/?]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, loss, imagesPerSecond, accuracy))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy))
 
                 if phase == 'train':
                     scheduler.step()
