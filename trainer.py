@@ -319,26 +319,36 @@ def trainCycle(image_datasets, model):
                         #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
                     
                     outputs = model(images)
+                    print("forward")
                     #outputs = model(imageBatch).logits
                     #if phase == 'val':
                     preds = torch.argmax(outputs, dim=1)
+                    print("preds")
                     
                     samples += len(images)
                     correct += sum(preds == tags)
+                    
+                    print("stat update")
+                    
                     tagBatch = torch.eye(len(classes), device=device)[tags]
+                    print("onehot")
                     
                     loss = criterion(outputs, tagBatch)
+                    print("loss")
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
                         accelerator.backward(loss)
+                        print("backward")
                         #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                         #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                         optimizer.step()
+                        print("optim")
                             
                                     
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/(samples+1e-8))
+                    print("accuracy")
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
