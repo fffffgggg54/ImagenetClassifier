@@ -82,7 +82,7 @@ FLAGS['imageSize'] = 224
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 256
+FLAGS['batch_size'] = 128
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
@@ -181,7 +181,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
     #model = ml_decoder.add_ml_decoder_head(model)
