@@ -309,14 +309,14 @@ def trainCycle(image_datasets, model):
                     #if phase == 'train':
                         #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
                     
-                    outputs = model(imageBatch)
+                    outputs = model(images)
                     #outputs = model(imageBatch).logits
                     #if phase == 'val':
                     preds = torch.argmax(outputs, dim=1)
                     
                     samples += len(images)
-                    correct += sum(preds == tagBatch)
-                    tagBatch = torch.eye(len(classes), device=device)[tagBatch]
+                    correct += sum(preds == tags)
+                    tagBatch = torch.eye(len(classes), device=device)[tags]
                     
                     loss = criterion(outputs, tagBatch)
 
