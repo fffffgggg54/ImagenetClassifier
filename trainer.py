@@ -306,27 +306,26 @@ def trainCycle(image_datasets, model):
                 
                 with torch.set_grad_enabled(phase == 'train'):
                     
-                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        #if phase == 'train':
-                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                        
-                        outputs = model(imageBatch)
-                        #outputs = model(imageBatch).logits
-                        #if phase == 'val':
-                        preds = torch.argmax(outputs, dim=1)
-                        
-                        samples += len(images)
-                        correct += sum(preds == tagBatch)
-                        tagBatch = torch.eye(len(classes), device=device)[tagBatch]
-                        
-                        loss = criterion(outputs, tagBatch)
+                    #if phase == 'train':
+                        #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                    
+                    outputs = model(imageBatch)
+                    #outputs = model(imageBatch).logits
+                    #if phase == 'val':
+                    preds = torch.argmax(outputs, dim=1)
+                    
+                    samples += len(images)
+                    correct += sum(preds == tagBatch)
+                    tagBatch = torch.eye(len(classes), device=device)[tagBatch]
+                    
+                    loss = criterion(outputs, tagBatch)
 
-                        # backward + optimize only if in training phase
-                        if phase == 'train' and (loss.isnan() == False):
-                            accelerator.backward(loss)
-                            #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                            #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                            optimizer.step()
+                    # backward + optimize only if in training phase
+                    if phase == 'train' and (loss.isnan() == False):
+                        accelerator.backward(loss)
+                        #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                        #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                        optimizer.step()
                             
                                     
                 if i % stepsPerPrintout == 0:
