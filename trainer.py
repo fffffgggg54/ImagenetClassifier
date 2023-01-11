@@ -355,8 +355,9 @@ def trainCycle(image_datasets, model):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-
+    print("getting datasets")
     image_datasets = getData()
+    print("getting model")
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
 
