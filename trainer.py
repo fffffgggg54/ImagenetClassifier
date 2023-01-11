@@ -226,7 +226,7 @@ def modelSetup(classes):
 def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
-    accelerator = Accelerator()
+    accelerator = Accelerator(mixed_precision="bf16", downcast_bf16=True)
     
     dataloaders = {x: accelerator.prepare_data_loader(
         torch.utils.data.DataLoader(
