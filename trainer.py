@@ -40,8 +40,6 @@ import torch_xla.utils.utils as xu
 import torch_xla.utils.gcsfs
 
 
-import datasets
-
 from accelerate import Accelerator
 
 
@@ -119,59 +117,20 @@ torch.backends.cudnn.allow_tf32 = True
 serverProcessPool = []
 workQueue = multiprocessing.Queue()
 '''
-
-class transformsCallable():
-    def __init__(self, transform):
-        self.transform = transform
-
-    def __call__(self, examples):
-        examples["image"] = self.transform(examples["image"].convert("RGB"))
-
-        return examples
-    
-
-
 def getData():
     startTime = time.time()
-    '''
+
     trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
     testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
-    '''
+
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
-    
-    
-    trainTransforms = transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
-        transforms.RandAugment(),
-        transforms.TrivialAugmentWide(),
-        #timm.data.random_erasing.RandomErasing(probability=1, mode='pixel', device='cpu'),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
 
-    valTransforms = transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    
-    imagenet_train = datasets.load_dataset('imagenet-1k', split='train', streaming=True) \
-        .map(transformsCallable(trainTransforms)) \
-        .shuffle(buffer_size=1000, seed=42) \
-        .with_format("torch")
-
-    imagenet_val = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
-        .map(transformsCallable(valTransforms)) \
-        .shuffle(buffer_size=1000, seed=42) \
-        .with_format("torch")
-
-
-    
     global classes
-    classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
+    classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
     
     
-    image_datasets = {'train': imagenet_train, 'val' : imagenet_val}
-    
+    image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
 def modelSetup(classes):
@@ -277,6 +236,7 @@ def trainCycle(image_datasets, model):
         torch.utils.data.DataLoader(
             image_datasets[x], 
             batch_size=FLAGS['batch_size'], 
+            shuffle=True, 
             num_workers=FLAGS['num_workers'], 
             persistent_workers = True, 
             prefetch_factor=2,
@@ -288,7 +248,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    #dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
+    dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     
     device = accelerator.device
 
@@ -319,7 +279,7 @@ def trainCycle(image_datasets, model):
     for epoch in range(FLAGS['resume_epoch'], FLAGS['num_epochs']):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
-        '''
+
         image_datasets['train'].transform = transforms.Compose([
             transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
             #transforms.RandAugment(),
@@ -334,7 +294,7 @@ def trainCycle(image_datasets, model):
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        '''
+        
         for phase in ['train', 'val']:
         
             samples = 0
