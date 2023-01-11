@@ -42,7 +42,7 @@ import torch_xla.utils.gcsfs
 
 from accelerate import Accelerator
 
-accelerator = Accelerator()
+
 
 
 # ================================================
@@ -226,7 +226,7 @@ def modelSetup(classes):
 def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
-
+    accelerator = Accelerator()
     
     dataloaders = {x: accelerator.prepare_data_loader(
         torch.utils.data.DataLoader(
@@ -359,12 +359,13 @@ def trainCycle(image_datasets, model):
 
         print()
 
+'''
 def _mp_fn(rank, flags, image_datasets, model):
     global FLAGS
     FLAGS = flags
     torch.set_default_tensor_type('torch.FloatTensor')
     trainCycle(image_datasets, model)
-
+'''
 
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
@@ -373,7 +374,8 @@ def main():
     image_datasets = getData()
     print("getting model")
     model = modelSetup(classes)
-    xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=8, start_method='fork')
+    #xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=8, start_method='fork')
+    trainCycle(image_datasets, model, FLAGS)
 
 
 if __name__ == '__main__':
