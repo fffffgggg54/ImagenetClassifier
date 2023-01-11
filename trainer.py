@@ -32,7 +32,7 @@ from timm.data.mixup import FastCollateMixup, Mixup
 
 from accelerate import Accelerator
 
-accelerator = Accelerator(mixed_precision="bf16", downcast_bf16=True)
+accelerator = Accelerator()
 
 
 # ================================================
