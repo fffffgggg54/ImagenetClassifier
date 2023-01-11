@@ -226,8 +226,6 @@ def modelSetup(classes):
 def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
-    #accelerator = Accelerator(mixed_precision="bf16", downcast_bf16=True)
-    
     accelerator = Accelerator()
     
     dataloaders = {x: accelerator.prepare_data_loader(
@@ -316,37 +314,36 @@ def trainCycle(image_datasets, model):
                 optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
-                    with accelerator.autocast():
                     
-                        #if phase == 'train':
-                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                        
-                        outputs = model(images)
-                        #print("forward")
-                        #outputs = model(imageBatch).logits
-                        #if phase == 'val':
-                        preds = torch.argmax(outputs, dim=1)
-                        #print("preds")
-                        
-                        samples += len(images)
-                        correct += sum(preds == tags)
-                        
-                        #print("stat update")
-                        
-                        tagBatch = torch.eye(len(classes), device=device)[tags]
-                        #print("onehot")
-                        
-                        loss = criterion(outputs, tagBatch)
-                        #print("loss")
+                    #if phase == 'train':
+                        #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                    
+                    outputs = model(images)
+                    #print("forward")
+                    #outputs = model(imageBatch).logits
+                    #if phase == 'val':
+                    preds = torch.argmax(outputs, dim=1)
+                    #print("preds")
+                    
+                    samples += len(images)
+                    correct += sum(preds == tags)
+                    
+                    #print("stat update")
+                    
+                    tagBatch = torch.eye(len(classes), device=device)[tags]
+                    #print("onehot")
+                    
+                    loss = criterion(outputs, tagBatch)
+                    #print("loss")
 
-                        # backward + optimize only if in training phase
-                        if phase == 'train' and (loss.isnan() == False):
-                            accelerator.backward(loss)
-                            #print("backward")
-                            #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                            #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                            optimizer.step()
-                            #print("optim")
+                    # backward + optimize only if in training phase
+                    if phase == 'train' and (loss.isnan() == False):
+                        accelerator.backward(loss)
+                        #print("backward")
+                        #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                        #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                        optimizer.step()
+                        #print("optim")
                             
                                     
                 if i % stepsPerPrintout == 0:
