@@ -71,7 +71,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 40
+FLAGS['num_workers'] = 30
 FLAGS['imageSize'] = 224
 
 
@@ -280,13 +280,13 @@ def trainCycle(image_datasets, model):
             transforms.TrivialAugmentWide(),
             #timm.data.random_erasing.RandomErasing(probability=1, mode='pixel', device='cpu'),
             transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         
         image_datasets['val'].transform = transforms.Compose([
             transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
             transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         
         for phase in ['train', 'val']:
