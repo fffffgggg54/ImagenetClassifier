@@ -58,11 +58,12 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b3/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = accelerator.device
+#FLAGS['device'] = accelerator.device
 
 # dataloader config
 
 FLAGS['num_workers'] = 35
+FLAGS['imageSize'] = 224
 
 
 # training config
@@ -106,11 +107,11 @@ workQueue = multiprocessing.Queue()
 def getData():
     startTime = time.time()
 
-    #trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
-    #testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
+    trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
+    testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
 
-    trainSet = torchvision.datasets.FakeData(size=10000)
-    testSet = torchvision.datasets.FakeData()
+    #trainSet = torchvision.datasets.FakeData(size=10000)
+    #testSet = torchvision.datasets.FakeData()
 
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
@@ -219,17 +220,27 @@ def trainCycle(image_datasets, model):
     startTime = time.time()
 
     
-    dataloaders = {x: accelerator.prepare_data_loader(torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41))) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: accelerator.prepare_data_loader(
+        torch.utils.data.DataLoader(
+            image_datasets[x], 
+            batch_size=FLAGS['batch_size'], 
+            shuffle=True, 
+            num_workers=FLAGS['num_workers'], 
+            persistent_workers = True, 
+            prefetch_factor=2,
+            pin_memory = True, 
+            drop_last=True, 
+            generator=torch.Generator().manual_seed(41))) for x in image_datasets} # set up dataloaders
     
     
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
-    device = FLAGS['device']
+    device = accelerator.device
     
     
-    
+    model.to(device)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -258,22 +269,17 @@ def trainCycle(image_datasets, model):
         print("starting epoch: " + str(epoch))
 
         image_datasets['train'].transform = transforms.Compose([
-            #transforms.Resize((256)),
-            #transforms.RandomHorizontalFlip(),
-            #RandomResizedCropAndInterpolation(size=224),
-            #transforms.TrivialAugmentWide(),
+            transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
+            transforms.RandAugment(),
+            transforms.TrivialAugmentWide(),
+            #timm.data.random_erasing.RandomErasing(probability=1, mode='pixel', device='cpu'),
             transforms.ToTensor(),
-            #RandomErasing(probability=0.5, mode='pixel', device='cpu'),
-            #transforms.GaussianBlur(kernel_size=(7, 7), sigma=(2, 10)),
-            #transforms.ToPILImage(),
-            #transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         
-        image_datasets['val'].transform = transforms.Compose([
-            #transforms.Resize((256,256)),
+        image_datasets['val'].transform = 
+            transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
             transforms.ToTensor(),
-            #transforms.RandomCrop(224),
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         
@@ -299,7 +305,7 @@ def trainCycle(image_datasets, model):
             loaderIterable = enumerate(dataloaders[phase])
             for i, (images, tags) in loaderIterable:
                 
-
+                optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
                     
@@ -321,10 +327,10 @@ def trainCycle(image_datasets, model):
                         # backward + optimize only if in training phase
                         if phase == 'train' and (loss.isnan() == False):
                             accelerator.backward(loss)
-                            if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                optimizer.step()
-                                optimizer.zero_grad()
+                            #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                            #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                            optimizer.step()
+                            
                                     
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/(samples+1e-8))
@@ -333,7 +339,6 @@ def trainCycle(image_datasets, model):
                     cycleTime = time.time()
 
                     print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy))
-                    torch.cuda.empty_cache()
 
                 if phase == 'train':
                     scheduler.step()
