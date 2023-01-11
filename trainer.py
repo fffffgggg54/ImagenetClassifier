@@ -9,7 +9,6 @@ import torch.utils.data
 import torchvision.datasets as dset
 from torchvision import models, transforms
 from torchvision.io import read_image
-import matplotlib.pyplot as plt
 import torchvision.utils as vutils
 import pandas as pd
 import numpy as np
