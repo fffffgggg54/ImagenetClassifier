@@ -75,14 +75,14 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 12
-FLAGS['imageSize'] = 384
+FLAGS['num_workers'] = 10
+FLAGS['imageSize'] = 224
 
 
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
@@ -181,7 +181,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('edgenext_base', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
     #model = ml_decoder.add_ml_decoder_head(model)
