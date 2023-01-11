@@ -24,7 +24,7 @@ import timm
 import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossMultiLabel
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
@@ -43,7 +43,11 @@ import torch_xla.utils.gcsfs
 from accelerate import Accelerator
 
 
-
+def create_dir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+        print("Created Directory : ", dir)
+    return dir
 
 # ================================================
 #           CONFIGURATION OPTIONS
@@ -254,7 +258,8 @@ def trainCycle(image_datasets, model):
 
     #criterion = SoftTargetCrossEntropy()
     #criterion = nn.BCEWithLogitsLoss()
-    criterion = nn.CrossEntropyLoss()
+    #criterion = nn.CrossEntropyLoss()
+    criterion = AsymmetricLossMultiLabel(gamma_pos=0, gamma_neg=0, clip=0)
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -301,7 +306,7 @@ def trainCycle(image_datasets, model):
                 
                 
             if phase == 'val':
-                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+                modelDir = create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
