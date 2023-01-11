@@ -375,7 +375,7 @@ def main():
     print("getting model")
     model = modelSetup(classes)
     #xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=8, start_method='fork')
-    trainCycle(image_datasets, model, FLAGS)
+    trainCycle(image_datasets, model)
 
 
 if __name__ == '__main__':
