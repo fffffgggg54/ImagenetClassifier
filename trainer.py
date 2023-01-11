@@ -75,14 +75,14 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 4
+FLAGS['num_workers'] = 12
 FLAGS['imageSize'] = 224
 
 
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 32
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
