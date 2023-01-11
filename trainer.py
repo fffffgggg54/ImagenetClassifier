@@ -246,7 +246,7 @@ def trainCycle(image_datasets, model):
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     
-    
+    device = accelerator.device
 
 
     print("initialized training, time spent: " + str(time.time() - startTime))
