@@ -113,9 +113,8 @@ def getData():
     #testSet = torchvision.datasets.FakeData()
 
     global classes
-    #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
+    classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
     
-    classes = {classIndex : className for classIndex, className in range(10)}
     
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
