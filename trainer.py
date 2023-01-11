@@ -30,6 +30,16 @@ from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
 from timm.data.mixup import FastCollateMixup, Mixup
 
+
+import torch_xla
+import torch_xla.core.xla_model as xm
+import torch_xla.debug.metrics as met
+import torch_xla.distributed.parallel_loader as pl
+import torch_xla.distributed.xla_multiprocessing as xmp
+import torch_xla.utils.utils as xu
+import torch_xla.utils.gcsfs
+
+
 from accelerate import Accelerator
 
 accelerator = Accelerator()
@@ -213,7 +223,7 @@ def modelSetup(classes):
     
     return model
 
-def trainCycle(image_datasets, model, FLAGS):
+def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
 
@@ -349,6 +359,11 @@ def trainCycle(image_datasets, model, FLAGS):
 
         print()
 
+def _mp_fn(rank, flags, image_datasets, model):
+    global FLAGS
+    FLAGS = flags
+    torch.set_default_tensor_type('torch.FloatTensor')
+    trainCycle(image_datasets, model)
 
 
 def main():
@@ -358,7 +373,7 @@ def main():
     image_datasets = getData()
     print("getting model")
     model = modelSetup(classes)
-    trainCycle(image_datasets, model, FLAGS)
+    xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=8, start_method='fork')
 
 
 if __name__ == '__main__':
