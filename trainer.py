@@ -238,7 +238,7 @@ def trainCycle(image_datasets, model):
     device = accelerator.device
     
     
-    model.to(device)
+    #model.to(device)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
