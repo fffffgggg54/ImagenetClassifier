@@ -213,7 +213,7 @@ def modelSetup(classes):
     
     return model
 
-def trainCycle(image_datasets, model):
+def trainCycle(image_datasets, model, FLAGS):
     print("starting training")
     startTime = time.time()
 
@@ -235,10 +235,9 @@ def trainCycle(image_datasets, model):
     #dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
-    device = accelerator.device
     
     
-    #model.to(device)
+
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -359,7 +358,7 @@ def main():
     image_datasets = getData()
     print("getting model")
     model = modelSetup(classes)
-    trainCycle(image_datasets, model)
+    trainCycle(image_datasets, model, FLAGS)
 
 
 if __name__ == '__main__':
