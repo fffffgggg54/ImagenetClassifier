@@ -75,7 +75,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 24
+FLAGS['num_workers'] = 12
 FLAGS['imageSize'] = 224
 
 
