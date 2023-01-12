@@ -56,7 +56,7 @@ def main():
         pin_memory = True,  
         generator=torch.Generator().manual_seed(41))
         
-    model = timm.create_model('resnet50', pretrained=True)
+    model = timm.create_model('convnext_femto_ols.d1_in1k', pretrained=True)
     model.eval()
     print("got model")
 
