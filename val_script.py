@@ -37,13 +37,7 @@ FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
 FLAGS['batch_size'] = 64
 
-
-
-
-
-
-
-FLAGS['image_size_initial'] = FLAGS['image_size'] // FLAGS['crop']
+FLAGS['image_size_initial'] = int(FLAGS['image_size'] // FLAGS['crop'])
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
