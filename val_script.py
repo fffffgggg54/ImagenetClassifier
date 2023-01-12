@@ -49,7 +49,7 @@ def main():
     loader = torch.utils.data.DataLoader(dataset,
         batch_size = FLAGS['batch_size'],
         shuffle=False,
-        num_workers=5,
+        num_workers=7,
         prefetch_factor=2, 
         pin_memory = True,  
         generator=torch.Generator().manual_seed(41))
