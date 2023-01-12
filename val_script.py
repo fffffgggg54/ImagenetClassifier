@@ -1,9 +1,12 @@
+# validation script that does a pass over the val set
+# currently set up for directml
+
+
 import torch
 import torch.cuda.amp
 import torch.nn as nn
 import torch.nn.parallel
 import torch.profiler
-import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
 import torchvision
@@ -25,15 +28,14 @@ torch.set_default_tensor_type('torch.FloatTensor')
 
 FLAGS = {}
 
-FLAGS['rootPath'] = "/kaggle/input/imagenet1kvalidation/"
+FLAGS['rootPath'] = "./data/imagenet1kvalidation/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
-#FLAGS['dataFile'] = FLAGS['rootPath'] + 'Labels/labels.txt'
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 FLAGS['batch_size'] = 64
 FLAGS['image_size'] = 224
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+
 transform = transforms.Compose([
     transforms.Resize((FLAGS['image_size'],FLAGS['image_size'])),
     #transforms.RandomCrop(224),
@@ -54,7 +56,10 @@ model = timm.create_model('tinynet_e', pretrained=True)
 model.eval()
 print("got model")
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+import torch_directml
+device = torch_directml.device()
+
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 model = model.to(device)
 
