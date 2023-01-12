@@ -20,7 +20,7 @@ import glob
 import gc
 import pandas as pd
 import os
-
+import timm
 from PIL import Image, ImageOps, ImageDraw
 import PIL
 
