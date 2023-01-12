@@ -28,12 +28,21 @@ torch.set_default_tensor_type('torch.FloatTensor')
 
 FLAGS = {}
 
+FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
+FLAGS['image_size'] = 224
+FLAGS['crop'] = 0.875
+
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
 FLAGS['batch_size'] = 64
-FLAGS['image_size'] = 224
-FLAGS['crop'] = 0.875
+
+
+
+
+
+
+
 FLAGS['image_size_initial'] = FLAGS['image_size'] // FLAGS['crop']
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
@@ -41,7 +50,7 @@ from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 def main():
     transform = transforms.Compose([
-        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation=torchvision.transforms.InterpolationMode.BICUBIC),
+        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation=FLAGS['interpolation']),
         transforms.CenterCrop(FLAGS['image_size']),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
@@ -56,7 +65,7 @@ def main():
         pin_memory = True,  
         generator=torch.Generator().manual_seed(41))
         
-    model = timm.create_model('convnext_femto_ols.d1_in1k', pretrained=True)
+    model = timm.create_model('convit_tiny', pretrained=True)
     model.eval()
     print("got model")
 
