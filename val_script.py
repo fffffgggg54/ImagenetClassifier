@@ -33,14 +33,16 @@ FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
 FLAGS['batch_size'] = 64
 FLAGS['image_size'] = 224
+FLAGS['crop'] = 0.875
+FLAGS['image_size_initial'] = FLAGS['image_size'] // FLAGS['crop']
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 def main():
     transform = transforms.Compose([
-        transforms.Resize((FLAGS['image_size'],FLAGS['image_size'])),
-        #transforms.RandomCrop(224),
+        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), torchvision.transforms.interpolation=InterpolationMode.BICUBIC),
+        transforms.CenterCrop(FLAGS['image_size']),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
     ])
@@ -49,12 +51,12 @@ def main():
     loader = torch.utils.data.DataLoader(dataset,
         batch_size = FLAGS['batch_size'],
         shuffle=False,
-        num_workers=7,
+        num_workers=5,
         prefetch_factor=2, 
         pin_memory = True,  
         generator=torch.Generator().manual_seed(41))
         
-    model = timm.create_model('tinynet_e', pretrained=True)
+    model = timm.create_model('resnet50', pretrained=True)
     model.eval()
     print("got model")
 
@@ -64,6 +66,9 @@ def main():
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
     model = model.to(device)
+    
+    model = torch.jit.script(model)
+    model = torch.jit.optimize_for_inference(model)
 
     print("starting run")
 
