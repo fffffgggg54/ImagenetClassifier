@@ -50,8 +50,8 @@ from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 def main():
     transform = transforms.Compose([
-        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation=FLAGS['interpolation']),
-        transforms.CenterCrop(FLAGS['image_size']),
+        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
+        transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
     ])
