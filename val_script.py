@@ -41,7 +41,7 @@ from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 def main():
     transform = transforms.Compose([
-        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), torchvision.transforms.interpolation=InterpolationMode.BICUBIC),
+        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation=torchvision.transforms.InterpolationMode.BICUBIC),
         transforms.CenterCrop(FLAGS['image_size']),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
