@@ -47,7 +47,7 @@ dataset = torchvision.datasets.ImageFolder(FLAGS['imageRoot'], transform=transfo
 loader = torch.utils.data.DataLoader(dataset,
     batch_size = FLAGS['batch_size'],
     shuffle=False,
-    num_workers=0,
+    num_workers=5,
     prefetch_factor=2, 
     pin_memory = True,  
     generator=torch.Generator().manual_seed(41))
