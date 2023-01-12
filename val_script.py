@@ -28,7 +28,7 @@ torch.set_default_tensor_type('torch.FloatTensor')
 
 FLAGS = {}
 
-FLAGS['rootPath'] = "./data/imagenet1kvalidation/"
+FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
 FLAGS['batch_size'] = 64
