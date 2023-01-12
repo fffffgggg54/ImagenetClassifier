@@ -35,7 +35,7 @@ FLAGS['crop'] = 0.875
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 32
 
 FLAGS['image_size_initial'] = int(FLAGS['image_size'] // FLAGS['crop'])
 
@@ -59,7 +59,7 @@ def main():
         pin_memory = True,  
         generator=torch.Generator().manual_seed(41))
         
-    model = timm.create_model('convit_tiny', pretrained=True)
+    model = timm.create_model('resnet50', pretrained=True)
     model.eval()
     print("got model")
 
@@ -102,6 +102,7 @@ def main():
 
 
     print(f'top-1: {100 * (correct/samples)}%')
+    print(f'spent {time.time() - cycleTime} seconds')
 
 
 if __name__ == '__main__':
