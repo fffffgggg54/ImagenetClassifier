@@ -36,59 +36,65 @@ FLAGS['image_size'] = 224
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-transform = transforms.Compose([
-    transforms.Resize((FLAGS['image_size'],FLAGS['image_size'])),
-    #transforms.RandomCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-])
-dataset = torchvision.datasets.ImageFolder(FLAGS['imageRoot'], transform=transform)
 
-loader = torch.utils.data.DataLoader(dataset,
-    batch_size = FLAGS['batch_size'],
-    shuffle=False,
-    num_workers=5,
-    prefetch_factor=2, 
-    pin_memory = True,  
-    generator=torch.Generator().manual_seed(41))
-	
-model = timm.create_model('tinynet_e', pretrained=True)
-model.eval()
-print("got model")
+def main():
+    transform = transforms.Compose([
+        transforms.Resize((FLAGS['image_size'],FLAGS['image_size'])),
+        #transforms.RandomCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+    ])
+    dataset = torchvision.datasets.ImageFolder(FLAGS['imageRoot'], transform=transform)
 
-import torch_directml
-device = torch_directml.device()
+    loader = torch.utils.data.DataLoader(dataset,
+        batch_size = FLAGS['batch_size'],
+        shuffle=False,
+        num_workers=5,
+        prefetch_factor=2, 
+        pin_memory = True,  
+        generator=torch.Generator().manual_seed(41))
+        
+    model = timm.create_model('tinynet_e', pretrained=True)
+    model.eval()
+    print("got model")
 
-#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
-model = model.to(device)
+    import torch_directml
+    device = torch_directml.device()
 
-print("starting run")
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(device)
+    model = model.to(device)
 
-startTime = time.time()
-cycleTime = time.time()
-samples = 0
-correct = 0
-stepsPerPrintout = 50
+    print("starting run")
 
-for i, (images, tags) in enumerate(loader):
-    imageBatch = images.to(device, non_blocking=True)
-    tagBatch = tags.to(device, non_blocking=True)
-    #tagsOneHot = torch.nn.functional.one_hot(tags, num_classes = len(classes)).to(device, non_blocking=True)
-    with torch.set_grad_enabled(False):
-        outputs = model(imageBatch)
-        preds = torch.argmax(outputs, dim=1)
-        samples += len(images)
-        correct += sum(preds == tagBatch)
+    startTime = time.time()
+    cycleTime = time.time()
+    samples = 0
+    correct = 0
+    stepsPerPrintout = 50
 
-
-
-    if i % stepsPerPrintout == 0:
-        accuracy = 100 * (correct/(samples+1e-8))
-        imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
-        cycleTime = time.time()
-
-        print('[%d/%d]\tImages/Second: %.4f\ttop-1: %.2f' % (i, len(loader), imagesPerSecond, accuracy))
+    for i, (images, tags) in enumerate(loader):
+        imageBatch = images.to(device, non_blocking=True)
+        tagBatch = tags.to(device, non_blocking=True)
+        #tagsOneHot = torch.nn.functional.one_hot(tags, num_classes = len(classes)).to(device, non_blocking=True)
+        with torch.set_grad_enabled(False):
+            outputs = model(imageBatch)
+            preds = torch.argmax(outputs, dim=1)
+            samples += len(images)
+            correct += sum(preds == tagBatch)
 
 
-print(f'top-1: {100 * (correct/samples)}%')
+
+        if i % stepsPerPrintout == 0:
+            accuracy = 100 * (correct/(samples+1e-8))
+            imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
+            cycleTime = time.time()
+
+            print('[%d/%d]\tImages/Second: %.4f\ttop-1: %.2f' % (i, len(loader), imagesPerSecond, accuracy))
+
+
+    print(f'top-1: {100 * (correct/samples)}%')
+
+
+if __name__ == '__main__':
+    main()
