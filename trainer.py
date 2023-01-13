@@ -76,8 +76,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 224
+FLAGS['num_workers'] = 1
+FLAGS['imageSize'] = 512
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
@@ -85,20 +85,20 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 
 # training config
 
-FLAGS['num_epochs'] = 100
+FLAGS['num_epochs'] = 10
 FLAGS['batch_size'] = 128
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 5
+FLAGS['lr_warmup_epochs'] = 0
 
 FLAGS['weight_decay'] = 2e-2
 
 FLAGS['resume_epoch'] = 0
 
-FLAGS['finetune'] = False
+FLAGS['finetune'] = True
 
 # debugging config
 
@@ -218,7 +218,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_b0', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('maxvit_base_tf_512.in21k_ft_in1k', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
@@ -403,7 +403,7 @@ def trainCycle(image_datasets, model):
 
                 if phase == 'train':
                     scheduler.step()
-            if phase == 'val':
+            if phase == 'validation':
                 print(f'top-1: {100 * (correct/samples)}%')
         
         time_elapsed = time.time() - epochTime
