@@ -165,9 +165,10 @@ def getData():
 
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
-    classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
+    #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
+    classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
-    image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
+    image_datasets = {'train': trainSet, 'validation' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
 def modelSetup(classes):
@@ -333,7 +334,7 @@ def trainCycle(image_datasets, model):
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         '''
-        for phase in ['train', 'val']:
+        for phase in ['train', 'validation']:
             image_datasets[phase].set_epoch(epoch)
         
             samples = 0
