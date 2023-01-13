@@ -22,6 +22,7 @@ import multiprocessing
 
 import timm
 import transformers
+import datasets
 
 import timm.models.layers.ml_decoder as ml_decoder
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossMultiLabel
