@@ -156,7 +156,7 @@ def getData():
         .map(transformsCallable(trainTransforms)) \
         .shuffle(buffer_size=10000, seed=42)
 
-    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=False) \
+    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
         .with_format("torch") \
         .map(transformsCallable(valTransforms)) \
         .shuffle(buffer_size=1000, seed=42)
