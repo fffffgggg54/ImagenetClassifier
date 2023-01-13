@@ -76,8 +76,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 10
-FLAGS['imageSize'] = 384
+FLAGS['num_workers'] = 1
+FLAGS['imageSize'] = 512
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.875
@@ -86,13 +86,13 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
-FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['batch_size'] = 8
+FLAGS['gradient_accumulation_iterations'] = 16
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 6
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
@@ -219,7 +219,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('maxvit_base_tf_512', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
@@ -270,7 +270,7 @@ def modelSetup(classes):
 def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
-    accelerator = Accelerator()
+    accelerator = Accelerator(gradient_accumulation_steps=FLAGS['gradient_accumulation_iterations'])
     
     dataloaders = {x: accelerator.prepare_data_loader(
         torch.utils.data.DataLoader(
@@ -358,40 +358,41 @@ def trainCycle(image_datasets, model):
             loaderIterable = enumerate(dataloaders[phase])
             for i, data in loaderIterable:
                 (images, tags) = data.values()
-                optimizer.zero_grad()
+                
                 
                 with torch.set_grad_enabled(phase == 'train'):
-                    
-                    #if phase == 'train':
-                        #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                    
-                    outputs = model(images)
-                    #print("forward")
-                    #outputs = model(imageBatch).logits
-                    #if phase == 'val':
-                    preds = torch.argmax(outputs, dim=1)
-                    #print("preds")
-                    
-                    samples += len(images)
-                    correct += sum(preds == tags)
-                    
-                    #print("stat update")
-                    
-                    tagBatch = torch.eye(len(classes), device=device)[tags]
-                    #print("onehot")
-                    
-                    loss = criterion(outputs, tagBatch)
-                    #print("loss")
+                    with accelerator.accumulate(model):
+                        
+                        #if phase == 'train':
+                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                        
+                        outputs = model(images)
+                        #print("forward")
+                        #outputs = model(imageBatch).logits
+                        #if phase == 'val':
+                        preds = torch.argmax(outputs, dim=1)
+                        #print("preds")
+                        
+                        samples += len(images)
+                        correct += sum(preds == tags)
+                        
+                        #print("stat update")
+                        
+                        tagBatch = torch.eye(len(classes), device=device)[tags]
+                        #print("onehot")
+                        
+                        loss = criterion(outputs, tagBatch)
+                        #print("loss")
 
-                    # backward + optimize only if in training phase
-                    if phase == 'train' and (loss.isnan() == False):
-                        accelerator.backward(loss)
-                        #print("backward")
-                        #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                        #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                        optimizer.step()
-                        #print("optim")
-                            
+                        # backward + optimize only if in training phase
+                        if phase == 'train' and (loss.isnan() == False):
+                            accelerator.backward(loss)
+                            #print("backward")
+                            #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                            #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                            optimizer.step()
+                            #print("optim")
+                            optimizer.zero_grad()
                                     
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/(samples+1e-8))
