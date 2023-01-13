@@ -299,9 +299,14 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.CrossEntropyLoss()
     criterion = AsymmetricLossMultiLabel(gamma_pos=0, gamma_neg=0, clip=0)
-
+    
+    params_to_update = []
+    for name, param in model.named_parameters():
+        if param.requires_grad == True:
+            params_to_update.append(param)
+    
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.SGD(params_to_update, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=dataset_sizes['train'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = dataset_sizes['train']*FLAGS['resume_epoch']
