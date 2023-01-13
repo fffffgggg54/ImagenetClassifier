@@ -158,12 +158,12 @@ def getData():
     classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
-    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=1000, seed=42)
+    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=100, seed=42)
 
     testSet = datasets.load_dataset('mrm8488/ImageNet1K-val', streaming=True)['train'] \
         .with_format("torch") \
         .map(transformsCallable(valTransforms)) \
-        .shuffle(buffer_size=1000, seed=42)
+        .shuffle(buffer_size=100, seed=42)
 
 
 
@@ -288,7 +288,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    dataset_sizes = {'train': int(1281167 / FLAGS['batch_size']), 'val': int(50000 / FLAGS['batch_size'])}
+    dataset_sizes = {'train': int((1281167 / FLAGS['batch_size'])/8), 'val': int((50000 / FLAGS['batch_size'])/8)}
     
     device = accelerator.device
 
