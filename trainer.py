@@ -86,7 +86,7 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 10
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 64
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3
