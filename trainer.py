@@ -29,7 +29,7 @@ from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
 from timm.data.mixup import FastCollateMixup, Mixup
-
+from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 import torch_xla
 import torch_xla.core.xla_model as xm
@@ -78,6 +78,9 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['num_workers'] = 10
 FLAGS['imageSize'] = 384
 
+FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
+FLAGS['crop'] = 0.875
+FLAGS['image_size_initial'] = int(FLAGS['image_size'] // FLAGS['crop'])
 
 # training config
 
@@ -105,12 +108,18 @@ FLAGS['stepsPerPrintout'] = 50
 classes = None
 
 
-# The flag below controls whether to allow TF32 on matmul. This flag defaults to False
-# in PyTorch 1.12 and later.
-torch.backends.cuda.matmul.allow_tf32 = True
 
-# The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
-torch.backends.cudnn.allow_tf32 = True
+
+
+class transformsCallable():
+    def __init__(self, transform):
+        self.transform = transform
+
+    def __call__(self, examples):
+        examples["image"] = self.transform(examples["image"].convert("RGB"))
+
+        return examples
+
 
 
 '''
@@ -119,16 +128,43 @@ workQueue = multiprocessing.Queue()
 '''
 def getData():
     startTime = time.time()
+    
+    trainTransforms = transforms.Compose([transforms.Resize((224,224)),
+        transforms.RandAugment(),
+        transforms.TrivialAugmentWide(),
+        #timm.data.random_erasing.RandomErasing(probability=1, mode='pixel', device='cpu'),
+        transforms.ToTensor(),
+        transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+    ])
 
-    trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
-    testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
+    valTransforms = transforms.Compose([
+        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
+        transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
+        transforms.ToTensor(),
+        transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+    ])
+
+    #trainSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'train')
+    #testSet = torchvision.datasets.ImageNet(FLAGS['imageRoot'], split = 'val')
 
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
 
+    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True) \
+        .with_format("torch") \
+        .map(transformsCallable(trainTransforms)) \
+        .shuffle(buffer_size=10000, seed=42)
+
+    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=False) \
+        .with_format("torch") \
+        .map(transformsCallable(valTransforms)) \
+        .shuffle(buffer_size=1000, seed=42)
+
+
+
     global classes
-    classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
-    
+    #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
+    classes = {classIndex : className for classIndex, className in enumerate(range(1000)}
     
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
@@ -237,7 +273,7 @@ def trainCycle(image_datasets, model):
         torch.utils.data.DataLoader(
             image_datasets[x], 
             batch_size=FLAGS['batch_size'], 
-            shuffle=True, 
+            #shuffle=True, 
             num_workers=FLAGS['num_workers'], 
             persistent_workers = True, 
             prefetch_factor=2,
@@ -280,7 +316,7 @@ def trainCycle(image_datasets, model):
     for epoch in range(FLAGS['resume_epoch'], FLAGS['num_epochs']):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
-
+        '''
         image_datasets['train'].transform = transforms.Compose([
             transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
             #transforms.RandAugment(),
@@ -295,8 +331,9 @@ def trainCycle(image_datasets, model):
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        
+        '''
         for phase in ['train', 'val']:
+            image_datasets[phase].set_epoch(epoch)
         
             samples = 0
             correct = 0
@@ -316,8 +353,8 @@ def trainCycle(image_datasets, model):
                     break;
 
             loaderIterable = enumerate(dataloaders[phase])
-            for i, (images, tags) in loaderIterable:
-                
+            for i, data in loaderIterable:
+                (images, tags) = data.values()
                 optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
@@ -360,7 +397,7 @@ def trainCycle(image_datasets, model):
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy))
+                    print('[%d/%d][%d/?]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i*FLAGS['batch_size'], loss, imagesPerSecond, accuracy))
 
                 if phase == 'train':
                     scheduler.step()
