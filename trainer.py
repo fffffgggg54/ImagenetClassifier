@@ -158,7 +158,7 @@ def getData():
     classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
-    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
+    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=1000, seed=42)
 
     testSet = datasets.load_dataset('mrm8488/ImageNet1K-val', streaming=True)['train'] \
         .with_format("torch") \
