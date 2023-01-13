@@ -151,7 +151,7 @@ def getData():
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
 
-    trainSet = datasets.load_dataset('mrm8488/ImageNet1K-train', streaming=True).with_format("torch")
+    trainSet = datasets.load_dataset('mrm8488/ImageNet1K-train', streaming=True)['train'].with_format("torch")
     
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
@@ -160,7 +160,7 @@ def getData():
     
     trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
 
-    testSet = datasets.load_dataset('mrm8488/ImageNet1K-val', streaming=True) \
+    testSet = datasets.load_dataset('mrm8488/ImageNet1K-val', streaming=True)['train'] \
         .with_format("torch") \
         .map(transformsCallable(valTransforms)) \
         .shuffle(buffer_size=1000, seed=42)
