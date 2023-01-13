@@ -286,7 +286,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    #dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
+    dataset_sizes = {x: int(image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size']) for x in image_datasets}
     
     device = accelerator.device
 
@@ -302,7 +302,7 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=dataset_sizes['train'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
     model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
@@ -398,7 +398,7 @@ def trainCycle(image_datasets, model):
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
-                    print('[%d/%d][%d/?]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i*FLAGS['batch_size'], loss, imagesPerSecond, accuracy))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, dataset_sizes[phase], loss, imagesPerSecond, accuracy))
 
                 if phase == 'train':
                     scheduler.step()
