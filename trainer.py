@@ -152,6 +152,8 @@ def getData():
     #testSet = torchvision.datasets.FakeData()
 
     trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True).with_format("torch")
+    n_shards = 10000
+    trainSet = datasets.concatenate([trainSet.shard(n_shards, i, contiguous=True) for i in range(n_shards)])
     
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
@@ -160,10 +162,10 @@ def getData():
     
     trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
 
-    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
-        .with_format("torch") \
-        .map(transformsCallable(valTransforms)) \
-        .shuffle(buffer_size=1000, seed=42)
+    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True).with_format("torch")
+    n_shards = 100
+    testSet = datasets.concatenate([testSet.shard(n_shards, i, contiguous=True) for i in range(n_shards)])
+    testSet = testSet.map(transformsCallable(valTransforms))0.shuffle(buffer_size=1000, seed=42)
 
 
 
