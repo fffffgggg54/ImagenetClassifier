@@ -80,7 +80,7 @@ FLAGS['imageSize'] = 384
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.875
-FLAGS['image_size_initial'] = int(FLAGS['image_size'] // FLAGS['crop'])
+FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 
 # training config
 
@@ -129,7 +129,7 @@ workQueue = multiprocessing.Queue()
 def getData():
     startTime = time.time()
     
-    trainTransforms = transforms.Compose([transforms.Resize((224,224)),
+    trainTransforms = transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
         transforms.RandAugment(),
         transforms.TrivialAugmentWide(),
         #timm.data.random_erasing.RandomErasing(probability=1, mode='pixel', device='cpu'),
@@ -139,7 +139,7 @@ def getData():
 
     valTransforms = transforms.Compose([
         transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
-        transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
+        transforms.CenterCrop((int(FLAGS['imageSize']),int(FLAGS['imageSize']))),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
     ])
