@@ -165,7 +165,7 @@ def getData():
     testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True).with_format("torch")
     n_shards = 100
     testSet = datasets.concatenate([testSet.shard(n_shards, i, contiguous=True) for i in range(n_shards)])
-    testSet = testSet.map(transformsCallable(valTransforms))0.shuffle(buffer_size=1000, seed=42)
+    testSet = testSet.map(transformsCallable(valTransforms)).shuffle(buffer_size=1000, seed=42)
 
 
 
