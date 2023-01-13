@@ -76,7 +76,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 1
+FLAGS['num_workers'] = 5
 FLAGS['imageSize'] = 384
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
