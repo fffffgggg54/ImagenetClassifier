@@ -87,7 +87,7 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 
 FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 8
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
 FLAGS['base_batch_size'] = 2048
