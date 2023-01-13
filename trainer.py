@@ -24,7 +24,7 @@ import timm
 import transformers
 import datasets
 
-import timm.layers.ml_decoder as ml_decoder
+import timm.models.layers.ml_decoder as ml_decoder
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossMultiLabel
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
@@ -76,8 +76,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 0
-FLAGS['imageSize'] = 512
+FLAGS['num_workers'] = 2
+FLAGS['imageSize'] = 224
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.875
@@ -86,13 +86,13 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 8
+FLAGS['batch_size'] = 64
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 5
+FLAGS['lr_warmup_epochs'] = 6
 
 FLAGS['weight_decay'] = 2e-2
 
@@ -151,19 +151,19 @@ def getData():
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
 
-    trainSet = datasets.load_dataset('mrm8488/ImageNet1K-train', streaming=True)['train'].with_format("torch")
+    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True).with_format("torch")
     
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
-    classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
-    #classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
+    #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
+    classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
-    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=100, seed=42)
+    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=1000, seed=42)
 
-    testSet = datasets.load_dataset('mrm8488/ImageNet1K-val', streaming=True)['train'] \
+    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
         .with_format("torch") \
         .map(transformsCallable(valTransforms)) \
-        .shuffle(buffer_size=100, seed=42)
+        .shuffle(buffer_size=1000, seed=42)
 
 
 
@@ -219,7 +219,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('maxvit_base_tf_512', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
@@ -270,7 +270,7 @@ def modelSetup(classes):
 def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
-    accelerator = Accelerator(gradient_accumulation_steps=FLAGS['gradient_accumulation_iterations'])
+    accelerator = Accelerator()
     
     dataloaders = {x: accelerator.prepare_data_loader(
         torch.utils.data.DataLoader(
@@ -278,7 +278,7 @@ def trainCycle(image_datasets, model):
             batch_size=FLAGS['batch_size'], 
             #shuffle=True, 
             num_workers=FLAGS['num_workers'], 
-            #persistent_workers = True, 
+            persistent_workers = True, 
             prefetch_factor=2,
             pin_memory = True, 
             drop_last=True, 
@@ -288,7 +288,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    dataset_sizes = {'train': int((1281167 / FLAGS['batch_size'])/8), 'val': int((50000 / FLAGS['batch_size'])/8)}
+    dataset_sizes = {x: int(image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size']) for x in image_datasets}
     
     device = accelerator.device
 
@@ -358,41 +358,40 @@ def trainCycle(image_datasets, model):
             loaderIterable = enumerate(dataloaders[phase])
             for i, data in loaderIterable:
                 (images, tags) = data.values()
-                
+                optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
-                    with accelerator.accumulate(model):
-                        
-                        #if phase == 'train':
-                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                        
-                        outputs = model(images)
-                        #print("forward")
-                        #outputs = model(imageBatch).logits
-                        #if phase == 'val':
-                        preds = torch.argmax(outputs, dim=1)
-                        #print("preds")
-                        
-                        samples += len(images)
-                        correct += sum(preds == tags)
-                        
-                        #print("stat update")
-                        
-                        tagBatch = torch.eye(len(classes), device=device)[tags]
-                        #print("onehot")
-                        
-                        loss = criterion(outputs, tagBatch)
-                        #print("loss")
+                    
+                    #if phase == 'train':
+                        #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                    
+                    outputs = model(images)
+                    #print("forward")
+                    #outputs = model(imageBatch).logits
+                    #if phase == 'val':
+                    preds = torch.argmax(outputs, dim=1)
+                    #print("preds")
+                    
+                    samples += len(images)
+                    correct += sum(preds == tags)
+                    
+                    #print("stat update")
+                    
+                    tagBatch = torch.eye(len(classes), device=device)[tags]
+                    #print("onehot")
+                    
+                    loss = criterion(outputs, tagBatch)
+                    #print("loss")
 
-                        # backward + optimize only if in training phase
-                        if phase == 'train' and (loss.isnan() == False):
-                            accelerator.backward(loss)
-                            #print("backward")
-                            #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                            #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                            optimizer.step()
-                            #print("optim")
-                            optimizer.zero_grad()
+                    # backward + optimize only if in training phase
+                    if phase == 'train' and (loss.isnan() == False):
+                        accelerator.backward(loss)
+                        #print("backward")
+                        #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                        #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                        optimizer.step()
+                        #print("optim")
+                            
                                     
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/(samples+1e-8))
