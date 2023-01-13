@@ -24,7 +24,7 @@ import timm
 import transformers
 import datasets
 
-import timm.models.layers.ml_decoder as ml_decoder
+import timm.layers.ml_decoder as ml_decoder
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossMultiLabel
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
