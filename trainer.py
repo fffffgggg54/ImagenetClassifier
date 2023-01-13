@@ -76,7 +76,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 1
+FLAGS['num_workers'] = 4
 FLAGS['imageSize'] = 512
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -151,16 +151,16 @@ def getData():
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
 
-    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True).with_format("torch")
+    trainSet = datasets.load_dataset('mrm8488/ImageNet1K-train', streaming=True).with_format("torch")
     
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
-    #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
-    classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
+    classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
+    #classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
     trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
 
-    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
+    testSet = datasets.load_dataset('mrm8488/ImageNet1K-val', streaming=True) \
         .with_format("torch") \
         .map(transformsCallable(valTransforms)) \
         .shuffle(buffer_size=1000, seed=42)
@@ -288,7 +288,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    dataset_sizes = {x: int(image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size']) for x in image_datasets}
+    dataset_sizes = {'train': int(1281167 / FLAGS['batch_size']), 'val': int(50000 / FLAGS['batch_size'])}
     
     device = accelerator.device
 
