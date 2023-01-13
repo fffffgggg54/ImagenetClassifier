@@ -151,10 +151,14 @@ def getData():
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
 
-    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True) \
-        .with_format("torch") \
-        .map(transformsCallable(trainTransforms)) \
-        .shuffle(buffer_size=10000, seed=42)
+    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True).with_format("torch")
+    
+    global classes
+    #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
+    #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
+    classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
+    
+    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
 
     testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
         .with_format("torch") \
@@ -163,10 +167,7 @@ def getData():
 
 
 
-    global classes
-    #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
-    #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
-    classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
+
     
     image_datasets = {'train': trainSet, 'validation' : testSet}   # put dataset into a list for easy handling
     return image_datasets
