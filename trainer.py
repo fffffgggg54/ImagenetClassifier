@@ -151,7 +151,7 @@ def getData():
     #trainSet = torchvision.datasets.FakeData(size=10000)
     #testSet = torchvision.datasets.FakeData()
 
-    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True).with_format("torch")
+    trainSet = datasets.load_dataset('imagenet-1k', split='train', streaming=True)
     n_shards = 10000
     trainSet = datasets.concatenate_datasets([trainSet.shard(n_shards, i, contiguous=True) for i in range(n_shards)])
     
@@ -160,11 +160,11 @@ def getData():
     #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
     classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
-    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
+    trainSet = trainSet.with_format("torch").map(transformsCallable(trainTransforms)).shuffle(buffer_size=10000, seed=42)
 
-    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True).with_format("torch")
+    testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True)
     n_shards = 100
-    testSet = datasets.concatenate_datasets([testSet.shard(n_shards, i, contiguous=True) for i in range(n_shards)])
+    testSet = datasets.with_format("torch").concatenate_datasets([testSet.shard(n_shards, i, contiguous=True) for i in range(n_shards)])
     testSet = testSet.map(transformsCallable(valTransforms)).shuffle(buffer_size=1000, seed=42)
 
 
