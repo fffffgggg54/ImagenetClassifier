@@ -76,8 +76,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 2
-FLAGS['imageSize'] = 224
+FLAGS['num_workers'] = 5
+FLAGS['imageSize'] = 512
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.875
@@ -86,7 +86,7 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 2
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3 * 8
@@ -158,12 +158,11 @@ def getData():
     #classes = {classIndex : className for classIndex, className in enumerate(range(1000))}
     classes = {classIndex : className for classIndex, className in enumerate(trainSet.info.features['label'].names)}
     
-    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=1000, seed=42)
+    trainSet = trainSet.map(transformsCallable(trainTransforms)).shuffle(buffer_size=2000, seed=42)
 
     testSet = datasets.load_dataset('imagenet-1k', split='validation', streaming=True) \
         .with_format("torch") \
-        .map(transformsCallable(valTransforms)) \
-        .shuffle(buffer_size=1000, seed=42)
+        .map(transformsCallable(valTransforms))
 
 
 
@@ -219,7 +218,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('maxvit_base_tf_512', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
@@ -288,7 +287,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    dataset_sizes = {x: int(image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size']) for x in image_datasets}
+    dataset_sizes = {x: int((image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size'])/8) for x in image_datasets}
     
     device = accelerator.device
 
