@@ -76,7 +76,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 1
+FLAGS['num_workers'] = 0
 FLAGS['imageSize'] = 512
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -278,7 +278,7 @@ def trainCycle(image_datasets, model):
             batch_size=FLAGS['batch_size'], 
             #shuffle=True, 
             num_workers=FLAGS['num_workers'], 
-            persistent_workers = True, 
+            #persistent_workers = True, 
             prefetch_factor=2,
             pin_memory = True, 
             drop_last=True, 
