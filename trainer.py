@@ -133,7 +133,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 
 # dataloader config
 
-FLAGS['num_workers'] = 5
+FLAGS['num_workers'] = 2
 FLAGS['imageSize'] = 384
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -143,7 +143,7 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 10
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 32
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3
