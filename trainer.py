@@ -188,6 +188,10 @@ def add_ml_decoder_head(model):
     elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
         if hasattr(model.head, 'flatten'):  # ConvNext case
             model.head.flatten = nn.Identity()
+        if hasattr(model.head, 'norm'):
+            model.head.norm = nn.Identity()
+        if hasattr(model, 'norm_pre'):
+            model.norm_pre = nn.Identity()
         model.head.global_pool = nn.Identity()
         del model.head.fc
         num_classes = model.num_classes
