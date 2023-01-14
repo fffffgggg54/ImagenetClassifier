@@ -166,6 +166,60 @@ FLAGS['stepsPerPrintout'] = 50
 classes = None
 
 
+MLDecoder = ml_decoder.MLDecoder
+
+def add_ml_decoder_head(model):
+
+    # TODO levit, ViT
+
+    if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
+        model.global_pool = nn.Identity()
+        del model.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    #this is kinda ugly, can make general case?
+    elif 'RegNet' in model._get_name() or 'TResNet' in model._get_name():
+        del model.head
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
+        if hasattr(model.head, 'flatten'):  # ConvNext case
+            model.head.flatten = nn.Identity()
+        model.head.global_pool = nn.Identity()
+        del model.head.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    
+    elif 'MobileNetV3' in model._get_name(): # mobilenetv3 - conflict with efficientnet
+        
+        model.flatten = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'global_pool') and hasattr(model, 'classifier'):  # EfficientNet
+        model.global_pool = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    
+
+    
+    
+
+    else:
+        print("Model code-writing is not aligned currently with ml-decoder")
+        exit(-1)
+    if hasattr(model, 'drop_rate'):  # Ml-Decoder has inner dropout
+        model.drop_rate = 0
+    return model
 
 
 
@@ -279,7 +333,7 @@ def modelSetup(classes):
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
-    model = ml_decoder.add_ml_decoder_head(model)
+    model = add_ml_decoder_head(model)
     
     # cvt
     
