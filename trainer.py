@@ -127,7 +127,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/'
 # dataloader config
 
 FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 512
+FLAGS['imageSize'] = 288
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
@@ -238,7 +238,7 @@ workQueue = multiprocessing.Queue()
 def getData():
     startTime = time.time()
     
-    trainTransforms = transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
+    trainTransforms = transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize']), interpolation=FLAGS['interpolation']),
         #transforms.RandAugment(),
         transforms.TrivialAugmentWide(),
         #timm.data.random_erasing.RandomErasing(probability=1, mode='pixel', device='cpu'),
@@ -326,11 +326,11 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
-    #model = add_ml_decoder_head(model)
+    model = add_ml_decoder_head(model)
     
     # cvt
     
