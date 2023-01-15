@@ -124,17 +124,10 @@ FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/'
 
 
-
-# device config
-
-
-FLAGS['ngpu'] = torch.cuda.is_available()
-#FLAGS['device'] = accelerator.device
-
 # dataloader config
 
 FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 528
+FLAGS['imageSize'] = 512
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
@@ -142,20 +135,20 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 
 # training config
 
-FLAGS['num_epochs'] = 10
+FLAGS['num_epochs'] = 300
 FLAGS['batch_size'] = 32
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 0
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
 FLAGS['resume_epoch'] = 0
 
-FLAGS['finetune'] = True
+FLAGS['finetune'] = False
 
 # debugging config
 
@@ -333,11 +326,11 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnet_b6.ns_jft_in1k', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     # cvt
     
