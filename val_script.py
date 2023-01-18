@@ -32,7 +32,7 @@ FLAGS = {}
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['image_size'] = 224
-FLAGS['crop'] = 0.9
+FLAGS['crop'] = 0.875
 
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
@@ -72,8 +72,8 @@ def main():
 
     #import torch_directml
     #device = torch_directml.device()
-    device = torch.device('cpu')
-    #device = torch.device("mps")
+    #device = torch.device('cpu')
+    device = torch.device("mps")
 
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
