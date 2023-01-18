@@ -37,7 +37,7 @@ FLAGS['crop'] = 0.85
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 32
 
 FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
@@ -79,8 +79,8 @@ def main():
     print(device)
     model = model.to(device)
     
-    model = torch.jit.script(model)
-    model = torch.jit.optimize_for_inference(model)
+    #model = torch.jit.script(model)
+    #model = torch.jit.optimize_for_inference(model)
 
     print("starting run")
 
