@@ -37,7 +37,7 @@ FLAGS['crop'] = 0.875
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
-FLAGS['batch_size'] = 32
+FLAGS['batch_size'] = 1
 
 FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
@@ -63,8 +63,8 @@ def main():
         pin_memory = True,  
         generator=torch.Generator().manual_seed(42))
         
-    #model = timm.create_model('poolformerv1_s12.sail_in1k', pretrained=True)
     model = timm.create_model('poolformerv1_s12.sail_in1k', pretrained=True)
+    #model = timm.create_model('convformer_b36.sail_in22k_ft_in1k_384', pretrained=True)
     #import metaformer_baselines
     #model = metaformer_baselines.identityformer_s12v1(pretrained=True)
     model.eval()
