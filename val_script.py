@@ -32,7 +32,7 @@ FLAGS = {}
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['image_size'] = 224
-FLAGS['crop'] = 0.85
+FLAGS['crop'] = 0.9
 
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
@@ -64,7 +64,7 @@ def main():
         generator=torch.Generator().manual_seed(42))
         
     #model = timm.create_model('poolformerv1_s12.sail_in1k', pretrained=True)
-    model = timm.create_model('identityformer_s12.sail_in1k', pretrained=True)
+    model = timm.create_model('poolformerv1_s12.sail_in1k', pretrained=True)
     #import metaformer_baselines
     #model = metaformer_baselines.identityformer_s12v1(pretrained=True)
     model.eval()
@@ -72,15 +72,15 @@ def main():
 
     #import torch_directml
     #device = torch_directml.device()
-    #device = torch.device('cpu')
-    device = torch.device("mps")
+    device = torch.device('cpu')
+    #device = torch.device("mps")
 
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
     model = model.to(device)
     
-    #model = torch.jit.script(model)
-    #model = torch.jit.optimize_for_inference(model)
+    model = torch.jit.script(model)
+    model = torch.jit.optimize_for_inference(model)
 
     print("starting run")
 
