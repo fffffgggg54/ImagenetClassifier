@@ -32,12 +32,12 @@ FLAGS = {}
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['image_size'] = 224
-FLAGS['crop'] = 0.9
+FLAGS['crop'] = 0.85
 
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
-FLAGS['batch_size'] = 32
+FLAGS['batch_size'] = 64
 
 FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
