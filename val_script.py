@@ -23,26 +23,30 @@ import os
 import timm
 from PIL import Image, ImageOps, ImageDraw
 import PIL
+from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-torch.set_default_tensor_type('torch.FloatTensor')
+
+
 
 FLAGS = {}
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['image_size'] = 224
-FLAGS['crop'] = 0.875
+FLAGS['crop'] = 0.9
 
 FLAGS['rootPath'] = "./data/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
 FLAGS['batch_size'] = 32
 
-FLAGS['image_size_initial'] = int(FLAGS['image_size'] // FLAGS['crop'])
+FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
-from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+
+
 
 
 def main():
+    print(FLAGS['image_size_initial'])
     transform = transforms.Compose([
         transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
         transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
@@ -53,18 +57,22 @@ def main():
 
     loader = torch.utils.data.DataLoader(dataset,
         batch_size = FLAGS['batch_size'],
-        shuffle=False,
-        num_workers=5,
+        shuffle=True,
+        num_workers=2,
         prefetch_factor=2, 
         pin_memory = True,  
-        generator=torch.Generator().manual_seed(41))
+        generator=torch.Generator().manual_seed(42))
         
-    model = timm.create_model('resnet50', pretrained=True)
+    #model = timm.create_model('poolformerv1_s12.sail_in1k', pretrained=True)
+    model = timm.create_model('identityformer_s12.sail_in1k', pretrained=True)
+    #import metaformer_baselines
+    #model = metaformer_baselines.identityformer_s12v1(pretrained=True)
     model.eval()
     print("got model")
 
-    import torch_directml
-    device = torch_directml.device()
+    #import torch_directml
+    #device = torch_directml.device()
+    device = torch.device('cpu')
 
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
@@ -79,7 +87,7 @@ def main():
     cycleTime = time.time()
     samples = 0
     correct = 0
-    stepsPerPrintout = 50
+    stepsPerPrintout = 100
 
     for i, (images, tags) in enumerate(loader):
         imageBatch = images.to(device, non_blocking=True)
@@ -102,7 +110,7 @@ def main():
 
 
     print(f'top-1: {100 * (correct/samples)}%')
-    print(f'spent {time.time() - cycleTime} seconds')
+    print(f'spent {time.time() - startTime} seconds')
 
 
 if __name__ == '__main__':
