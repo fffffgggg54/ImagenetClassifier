@@ -31,12 +31,14 @@ from timm.models.metaformers import default_cfgs as default_cfgs
 
 
 
-def test_model(modelName, crop, input_size):
+def test_model(modelName, crop):
+    model = timm.create_model(modelName, pretrained=True)
+
     
     FLAGS = {}
 
     FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
-    FLAGS['image_size'] = input_size
+    FLAGS['image_size'] = model.default_cfgs['input_size'][2]
     FLAGS['crop'] = crop
 
     FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet"
@@ -64,7 +66,6 @@ def test_model(modelName, crop, input_size):
         pin_memory = True,  
         generator=torch.Generator().manual_seed(42))
         
-    model = timm.create_model(modelName, pretrained=True)
     #model = timm.create_model('convformer_b36.sail_in22k_ft_in1k_384', pretrained=True)
     #import metaformer_baselines
     #model = metaformer_baselines.identityformer_s12v1(pretrained=True)
@@ -116,14 +117,11 @@ def test_model(modelName, crop, input_size):
 
 
 def main():
-    models = default_cfgs
-    print(models)
+    models = default_cfgs.keys()
     crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825]
-    for k, _, v in models:
-        currModel = k
-        in_size = v['input_size'][2]
+    for currModel in models:
         for currCrop in crop_bins:
-            test_model(currModel, currCrop, in_size)
+            test_model(currModel, currCrop)
 
 
 if __name__ == '__main__':
