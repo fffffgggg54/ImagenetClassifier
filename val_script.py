@@ -59,24 +59,24 @@ def test_model(modelName, crop, input_size):
     loader = torch.utils.data.DataLoader(dataset,
         batch_size = FLAGS['batch_size'],
         shuffle=True,
-        num_workers=2,
+        num_workers=10,
         prefetch_factor=2, 
         pin_memory = True,  
         generator=torch.Generator().manual_seed(42))
         
-    model = timm.create_model('identityformer_s12.sail_in1k', pretrained=True)
+    model = timm.create_model(modelName, pretrained=True)
     #model = timm.create_model('convformer_b36.sail_in22k_ft_in1k_384', pretrained=True)
     #import metaformer_baselines
     #model = metaformer_baselines.identityformer_s12v1(pretrained=True)
     model.eval()
     #print("got model")
 
-    import torch_directml
-    device = torch_directml.device()
+    #import torch_directml
+    #device = torch_directml.device()
     #device = torch.device('cpu')
     #device = torch.device("mps")
 
-    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     #print(device)
     model = model.to(device)
     
@@ -112,8 +112,7 @@ def test_model(modelName, crop, input_size):
         '''
 
     print(f'top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
-    model = model.cpu()
-    del model
+
 
 
 def main():
