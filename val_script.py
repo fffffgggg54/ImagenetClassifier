@@ -41,7 +41,7 @@ def test_model(modelName, crop):
     FLAGS['image_size'] = model.default_cfg['input_size'][2]
     FLAGS['crop'] = crop
 
-    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet"
+    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
     FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
 
     FLAGS['batch_size'] = 64
