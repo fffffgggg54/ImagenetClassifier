@@ -113,6 +113,8 @@ def test_model(modelName, crop):
         '''
 
     print(f'top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
+    model = model.cpu()
+    del model
 
 
 
