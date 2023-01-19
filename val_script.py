@@ -24,29 +24,30 @@ import timm
 from PIL import Image, ImageOps, ImageDraw
 import PIL
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-
-
-
-
-FLAGS = {}
-
-FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
-FLAGS['image_size'] = 224
-FLAGS['crop'] = 0.875
-
-FLAGS['rootPath'] = "./data/"
-FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
-
-FLAGS['batch_size'] = 64
-
-FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
+from timm.models.metaformers import default_cfgs as default_cfgs
 
 
 
 
 
-def main():
-    print(FLAGS['image_size_initial'])
+
+def test_model(modelName, crop, input_size):
+    
+    FLAGS = {}
+
+    FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
+    FLAGS['image_size'] = input_size
+    FLAGS['crop'] = crop
+
+    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet"
+    FLAGS['imageRoot'] = FLAGS['rootPath'] + 'val/'
+
+    FLAGS['batch_size'] = 64
+
+    FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
+    
+    print(f'testing model: {modelName}, crop: {crop}')
+    
     transform = transforms.Compose([
         transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
         transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
@@ -68,21 +69,21 @@ def main():
     #import metaformer_baselines
     #model = metaformer_baselines.identityformer_s12v1(pretrained=True)
     model.eval()
-    print("got model")
+    #print("got model")
 
-    #import torch_directml
-    #device = torch_directml.device()
+    import torch_directml
+    device = torch_directml.device()
     #device = torch.device('cpu')
-    device = torch.device("mps")
+    #device = torch.device("mps")
 
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(device)
+    #print(device)
     model = model.to(device)
     
     model = torch.jit.script(model)
     model = torch.jit.optimize_for_inference(model)
 
-    print("starting run")
+    #print("starting run")
 
     startTime = time.time()
     cycleTime = time.time()
@@ -101,17 +102,28 @@ def main():
             correct += sum(preds == tagBatch)
 
 
-
+        '''
         if i % stepsPerPrintout == 0:
             accuracy = 100 * (correct/(samples+1e-8))
             imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
             cycleTime = time.time()
 
             print('[%d/%d]\tImages/Second: %.4f\ttop-1: %.2f' % (i, len(loader), imagesPerSecond, accuracy))
+        '''
+
+    print(f'top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
+    model = model.cpu()
+    del model
 
 
-    print(f'top-1: {100 * (correct/samples)}%')
-    print(f'spent {time.time() - startTime} seconds')
+def main():
+    models = default_cfgs
+    crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825]
+    for k, v in models:
+        currModel = k
+        in_size = v['input_size'][2]
+        for currCrop in crop_bins:
+            test_model(currModel, currCrop, in_size)
 
 
 if __name__ == '__main__':
