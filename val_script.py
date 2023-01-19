@@ -117,6 +117,7 @@ def test_model(modelName, crop, input_size):
 
 def main():
     models = default_cfgs
+    print(models)
     crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825]
     for k, v in models:
         currModel = k
