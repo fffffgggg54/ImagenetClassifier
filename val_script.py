@@ -38,7 +38,7 @@ def test_model(modelName, crop):
     FLAGS = {}
 
     FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
-    FLAGS['image_size'] = model.default_cfgs['input_size'][2]
+    FLAGS['image_size'] = model.default_cfg['input_size'][2]
     FLAGS['crop'] = crop
 
     FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet"
