@@ -48,8 +48,6 @@ def test_model(modelName, crop):
 
     FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
     
-    print(f'testing model: {modelName}, crop: {crop}')
-    
     transform = transforms.Compose([
         transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
         transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
@@ -112,7 +110,7 @@ def test_model(modelName, crop):
             print('[%d/%d]\tImages/Second: %.4f\ttop-1: %.2f' % (i, len(loader), imagesPerSecond, accuracy))
         '''
 
-    print(f'top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
+    print(f'model: {modelName}, crop: {crop}, top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
     model = model.cpu()
     del model
 
@@ -121,6 +119,7 @@ def test_model(modelName, crop):
 def main():
     models = default_cfgs.keys()
     crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825]
+    print('starting run')
     for currModel in models:
         for currCrop in crop_bins:
             test_model(currModel, currCrop)
