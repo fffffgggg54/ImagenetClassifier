@@ -79,8 +79,8 @@ def test_model(model, crop):
     #print(device)
     model = model.to(device)
     
-    model = torch.jit.script(model)
-    model = torch.jit.optimize_for_inference(model)
+    #model = torch.jit.script(model)
+    #model = torch.jit.optimize_for_inference(model)
 
     #print("starting run")
 
@@ -118,7 +118,7 @@ def test_model(model, crop):
 
 def main():
     models = default_cfgs.keys()
-    crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825]
+    crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825, 0.8, 0.75]
     print('starting run')
     for currModel in models:
         model = timm.create_model(currModel, pretrained=True)
