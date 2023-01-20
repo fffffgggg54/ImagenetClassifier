@@ -31,8 +31,8 @@ from timm.models.metaformers import default_cfgs as default_cfgs
 
 
 
-def test_model(modelName, crop):
-    model = timm.create_model(modelName, pretrained=True)
+def test_model(model, crop):
+    
 
     
     FLAGS = {}
@@ -121,8 +121,9 @@ def main():
     crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825]
     print('starting run')
     for currModel in models:
+        model = timm.create_model(currModel, pretrained=True)
         for currCrop in crop_bins:
-            test_model(currModel, currCrop)
+            test_model(model, currCrop)
 
 
 if __name__ == '__main__':
