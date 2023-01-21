@@ -330,7 +330,7 @@ def modelSetup(classes):
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     # cvt
     
