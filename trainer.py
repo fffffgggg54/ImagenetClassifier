@@ -127,7 +127,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/'
 # dataloader config
 
 FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 640
+FLAGS['imageSize'] = 448
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
