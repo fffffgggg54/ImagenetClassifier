@@ -127,7 +127,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/'
 # dataloader config
 
 FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 288
+FLAGS['imageSize'] = 640
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
@@ -136,7 +136,7 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 300
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 8
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-3
@@ -326,7 +326,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
