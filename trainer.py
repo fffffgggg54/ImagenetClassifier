@@ -41,7 +41,14 @@ import torch_xla.utils.utils as xu
 import torch_xla.utils.gcsfs
 
 
-from accelerate import Accelerator
+#backend = 'accelerate'
+backend = 'lightning'
+
+if backend == 'accelerate':
+    from accelerate import Accelerator
+    
+elif backend == 'lightning':
+    from lightning.fabric import Fabric
 
 import timm.layers.ml_decoder as ml_decoder
 MLDecoder = ml_decoder.MLDecoder
@@ -377,9 +384,17 @@ def modelSetup(classes):
 def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
-    accelerator = Accelerator()
     
-    dataloaders = {x: accelerator.prepare_data_loader(
+    if backend == 'accelerate':
+        accelerator = Accelerator()
+        dl_prep_fn = accelerator.prepare_data_loader
+    elif backend == 'lightning':
+        fabric = Fabric(accelerator="tpu", devices=8, precision=16)
+        fabric.launch()
+        dl_prep_fn = fabric.setup_dataloaders
+    
+    
+    dataloaders = {x: dl_prep_fn(
         torch.utils.data.DataLoader(
             image_datasets[x], 
             batch_size=FLAGS['batch_size'], 
@@ -416,10 +431,14 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = optim.SGD(params_to_update, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    
+    if backend == 'lightning':
+        model, optimizer = fabric.setup(model, optimizer)
+    
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=dataset_sizes['train'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = dataset_sizes['train']*FLAGS['resume_epoch']
-    
-    model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
+    if backend == 'accelerate':
+        model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
     
     print("starting training")
     
@@ -497,7 +516,10 @@ def trainCycle(image_datasets, model):
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
-                        accelerator.backward(loss)
+                        if backend == 'accelerate':
+                            accelerator.backward(loss)
+                        elif backend == 'lightning':
+                            fabric.backward(loss)
                         #print("backward")
                         #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                         #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
