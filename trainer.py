@@ -41,8 +41,8 @@ import torch_xla.utils.utils as xu
 import torch_xla.utils.gcsfs
 
 
-#backend = 'accelerate'
-backend = 'lightning'
+backend = 'accelerate'
+#backend = 'lightning'
 
 if backend == 'accelerate':
     from accelerate import Accelerator
