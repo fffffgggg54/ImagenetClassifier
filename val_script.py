@@ -121,9 +121,11 @@ def main():
     crop_bins=[1.00, 0.975, 0.95, 0.925, 0.90, 0.875, 0.85, 0.825, 0.8, 0.75]
     print('starting run')
     for currModel in models:
-        model = timm.create_model(currModel, pretrained=True)
-        for currCrop in crop_bins:
-            test_model(model, currCrop)
+        for cfg in list(default_cfgs[currModel].cfgs.keys()):
+            if 'in1k' in cfg:
+                model = timm.create_model(currModel+'.'+'cfg', pretrained=True)
+                for currCrop in crop_bins:
+                    test_model(model, currCrop)
 
 
 if __name__ == '__main__':
