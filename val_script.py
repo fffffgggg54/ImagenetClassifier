@@ -33,6 +33,8 @@ from timm.models.metaformers import default_cfgs as default_cfgs
 
 def test_model(model, crop):
     
+    modelName = model.pretrained_cfg["architecture"]
+    modelTag = model.pretrained_cfg["tag"]
     
     FLAGS = {}
 
@@ -109,7 +111,7 @@ def test_model(model, crop):
             print('[%d/%d]\tImages/Second: %.4f\ttop-1: %.2f' % (i, len(loader), imagesPerSecond, accuracy))
         '''
 
-    print(f'model: {model.pretrained_cfg["architechture"]}.{model.pretrained_cfg["tag"]}, crop: {crop}, top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
+    print(f'model: {modelName}.{modelTag}, crop: {crop}, top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
     model = model.cpu()
     del model
 
@@ -122,7 +124,7 @@ def main():
     for currModel in models:
         for cfg in list(default_cfgs[currModel].cfgs.keys()):
             if 'in1k' in cfg:
-                model = timm.create_model(currModel+'.'+cfg, pretrained=True)
+                model = timm.create_model(currModel+'.'+'cfg, pretrained=True)
                 for currCrop in crop_bins:
                     test_model(model, currCrop)
 
