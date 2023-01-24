@@ -124,7 +124,7 @@ def main():
     for currModel in models:
         for cfg in list(default_cfgs[currModel].cfgs.keys()):
             if 'in1k' in cfg:
-                model = timm.create_model(currModel+'.'+'cfg, pretrained=True)
+                model = timm.create_model(currModel+'.'+cfg, pretrained=True)
                 for currCrop in crop_bins:
                     test_model(model, currCrop)
 
