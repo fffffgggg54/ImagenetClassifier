@@ -109,7 +109,7 @@ def test_model(model, crop):
             print('[%d/%d]\tImages/Second: %.4f\ttop-1: %.2f' % (i, len(loader), imagesPerSecond, accuracy))
         '''
 
-    print(f'model: {model.default_cfg["architechture"]}.{model.default_cfg["tag"]}, crop: {crop}, top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
+    print(f'model: {model.pretrained_cfg["architechture"]}.{model.pretrained_cfg["tag"]}, crop: {crop}, top-1: {100 * (correct/samples)}%, spent {(time.time() - startTime):.0f} seconds')
     model = model.cpu()
     del model
 
