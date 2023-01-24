@@ -49,7 +49,7 @@ def test_model(model, crop):
     FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
     
     transform = transforms.Compose([
-        transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
+        transforms.Resize(FLAGS['image_size_initial'], interpolation = FLAGS['interpolation']),
         transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
