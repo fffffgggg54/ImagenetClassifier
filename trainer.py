@@ -168,65 +168,7 @@ def add_ml_decoder_head(model):
         model.drop_rate = 0
     return model
 
-# https://github.com/bartwojcik/lossgrad
 
-def euclidean_norm_squared(vec_list):
-    return sum(torch.sum(v ** 2).item() for v in vec_list)
-
-
-def modify_lr(optimizer, mul):
-    for param_group in optimizer.param_groups:
-        param_group['lr'] *= mul
-
-
-def get_lr(optimizer):
-    lrs = [param_group['lr'] for param_group in optimizer.param_groups]
-    for lr in lrs:
-        if lr != lrs[0]:
-            return lrs
-    return lrs[0]
-
-
-DENOMINATOR_EPS = 1e-25
-
-
-class LossgradOptimizer:
-
-    def __init__(self, optimizer, net, criterion, c=1.05):
-        self.optimizer = optimizer
-        self.c = c
-        self.net = net
-        self.criterion = criterion
-
-    def load_state_dict(self, state_dict):
-        if 'c' in state_dict:
-            self.c = state_dict['c']
-            del state_dict['c']
-        self.optimizer.load_state_dict(state_dict)
-
-    def state_dict(self):
-        state_dict = self.optimizer.state_dict()
-        state_dict['c'] = self.c
-        return state_dict
-
-    def step(self, X, y, loss):
-        with torch.no_grad():
-            grad_norm_squared = euclidean_norm_squared((-p.grad for p
-                                                        in self.net.parameters()))
-            lred = grad_norm_squared * get_lr(self.optimizer)
-            approx = loss.item() - lred
-            self.optimizer.step()
-            actual = self.criterion(self.net(X), y).item()
-            rel_err = (actual - approx) / (lred + DENOMINATOR_EPS)
-        if rel_err > 0.5:
-            h_mul = 1 / self.c
-        else:
-            h_mul = self.c
-        modify_lr(self.optimizer, h_mul)
-        return rel_err, grad_norm_squared
-
-    def get_lr(self):
-        return get_lr(self.optimizer)
 
 class transformsCallable():
     def __init__(self, transform):
@@ -411,7 +353,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    #dataset_sizes = {x: int((image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size'])/8) for x in image_datasets}
+    dataset_sizes = {x: int((image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size'])/8) for x in image_datasets}
     
     device = accelerator.device
 
@@ -432,13 +374,14 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = optim.SGD(params_to_update, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = LossgradOptimizer(optimizer, model, criterion)
     
+    if backend == 'lightning':
+        model, optimizer = fabric.setup(model, optimizer)
     
-    #scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=dataset_sizes['train'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
-    #scheduler.last_epoch = dataset_sizes['train']*FLAGS['resume_epoch']
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=dataset_sizes['train'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler.last_epoch = dataset_sizes['train']*FLAGS['resume_epoch']
     if backend == 'accelerate':
-        model, optimizer = accelerator.prepare(model, optimizer)
+        model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
     
     print("starting training")
     
@@ -488,8 +431,7 @@ def trainCycle(image_datasets, model):
 
             loaderIterable = enumerate(dataloaders[phase])
             for i, data in loaderIterable:
-                imageBatch = data['Image']
-                tagBatch = data['labels']
+                (images, tags) = data.values()
                 optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
@@ -498,30 +440,49 @@ def trainCycle(image_datasets, model):
                         #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
                     
                     outputs = model(images)
+                    #print("forward")
+                    #outputs = model(imageBatch).logits
+                    #if phase == 'val':
+                    preds = torch.argmax(outputs, dim=1)
+                    #print("preds")
+                    
+                    samples += len(images)
+                    correct += sum(preds == tags)
+                    
+                    #print("stat update")
+                    
+                    tagBatch = torch.eye(len(classes), device=device)[tags]
+                    #print("onehot")
+                    
                     loss = criterion(outputs, tagBatch)
                     #print("loss")
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
-                        accelerator.backward(loss)
+                        if backend == 'accelerate':
+                            accelerator.backward(loss)
+                        elif backend == 'lightning':
+                            fabric.backward(loss)
                         #print("backward")
                         #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                         #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                        #optimizer.step()
-                        optimizer.step(images, tags, loss)
+                        optimizer.step()
                         #print("optim")
                             
                                     
                 if i % stepsPerPrintout == 0:
+                    accuracy = 100 * (correct/(samples+1e-8))
                     #print("accuracy")
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\t' % (epoch, FLAGS['num_epochs'], i, 0, loss, imagesPerSecond))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, dataset_sizes[phase], loss, imagesPerSecond, accuracy))
 
-                #if phase == 'train':
-                #    scheduler.step()
+                if phase == 'train':
+                    scheduler.step()
+            if phase == 'validation':
+                print(f'top-1: {100 * (correct/samples)}%')
         
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
@@ -531,6 +492,14 @@ def trainCycle(image_datasets, model):
         gc.collect()
 
         print()
+
+'''
+def _mp_fn(rank, flags, image_datasets, model):
+    global FLAGS
+    FLAGS = flags
+    torch.set_default_tensor_type('torch.FloatTensor')
+    trainCycle(image_datasets, model)
+'''
 
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
