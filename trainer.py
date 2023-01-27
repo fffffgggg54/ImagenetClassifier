@@ -342,8 +342,8 @@ def trainCycle(image_datasets, model):
             image_datasets[x], 
             batch_size=FLAGS['batch_size'], 
             #shuffle=True, 
-            num_workers=FLAGS['num_workers'], 
-            persistent_workers = True, 
+            #num_workers=FLAGS['num_workers'], 
+            #persistent_workers = True, 
             prefetch_factor=2,
             pin_memory = True, 
             drop_last=True, 
@@ -420,7 +420,7 @@ def trainCycle(image_datasets, model):
                 print("training set")
                 
                 
-            if phase == 'val':
+            if phase == 'validation':
                 modelDir = create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
