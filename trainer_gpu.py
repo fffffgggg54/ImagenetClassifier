@@ -52,7 +52,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b3/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/custVit/'
 
 
 
@@ -60,7 +60,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b3/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_AMP'] = True
@@ -69,14 +69,14 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 35
+FLAGS['num_workers'] = 14
 
 
 # training config
 
 FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['gradient_accumulation_iterations'] = 8
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -85,10 +85,9 @@ FLAGS['lr_warmup_epochs'] = 6
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
-FLAGS['channels_last'] = True
 
 # debugging config
 
@@ -98,13 +97,6 @@ FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 
-
-# The flag below controls whether to allow TF32 on matmul. This flag defaults to False
-# in PyTorch 1.12 and later.
-torch.backends.cuda.matmul.allow_tf32 = True
-
-# The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
-torch.backends.cudnn.allow_tf32 = True
 
 
 '''
@@ -221,7 +213,6 @@ def trainCycle(image_datasets, model):
     print("starting training")
     startTime = time.time()
 
-    timm.utils.jit.set_jit_fuser("te")
     
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
@@ -234,9 +225,8 @@ def trainCycle(image_datasets, model):
     device2 = FLAGS['device2']
     
     
-    memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
-    model = model.to(device, memory_format=memory_format)
+    model = model.to(device)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -250,7 +240,6 @@ def trainCycle(image_datasets, model):
     optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
-    if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
 
     print("starting training")
     
@@ -315,36 +304,27 @@ def trainCycle(image_datasets, model):
                 
                 with torch.set_grad_enabled(phase == 'train'):
                     
-                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        #if phase == 'train':
-                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                        
-                        outputs = model(imageBatch)
-                        #outputs = model(imageBatch).logits
-                        #if phase == 'val':
-                        preds = torch.argmax(outputs, dim=1)
-                        
-                        samples += len(images)
-                        correct += sum(preds == tagBatch)
-                        tagBatch = torch.eye(len(classes), device=device)[tagBatch]
-                        
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    #if phase == 'train':
+                        #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                    
+                    outputs = model(imageBatch)
+                    #outputs = model(imageBatch).logits
+                    #if phase == 'val':
+                    preds = torch.argmax(outputs, dim=1)
+                    
+                    samples += len(images)
+                    correct += sum(preds == tagBatch)
+                    tagBatch = torch.eye(len(classes), device=device)[tagBatch]
+                    
+                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
-                        # backward + optimize only if in training phase
-                        if phase == 'train' and (loss.isnan() == False):
-                            if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                                scaler.scale(loss).backward()   #lotta time spent here
-                                if(i % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                    scaler.step(optimizer)
-                                    scaler.update()
-                                    optimizer.zero_grad()
-                            else:                               # apple gpu/cpu case
-                                loss.backward()
-                                if(i % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                    optimizer.step()
-                                    optimizer.zero_grad()
+                    # backward + optimize only if in training phase
+                    if phase == 'train' and (loss.isnan() == False):
+                        loss.backward()
+                        if(i % FLAGS['gradient_accumulation_iterations'] == 0):
+                            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                            optimizer.step()
+                            optimizer.zero_grad()
                                     
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/(samples+1e-8))
