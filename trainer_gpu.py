@@ -81,7 +81,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 24
+FLAGS['num_workers'] = 30
 
 
 # training config
