@@ -103,8 +103,8 @@ FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = True
-FLAGS['progressiveSizeStartRatio'] = 0.7
-FLAGS['progressiveAugStartRatio'] = 1.8
+FLAGS['progressiveSizeStart'] = 0.7
+FLAGS['progressiveAugRatio'] = 1.8
 
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
