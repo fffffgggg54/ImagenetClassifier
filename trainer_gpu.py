@@ -39,6 +39,14 @@ import PIL
 import random
 
 
+torch.backends.cudnn.benchmark = True
+
+# The flag below controls whether to allow TF32 on matmul. This flag defaults to False
+# in PyTorch 1.12 and later.
+torch.backends.cuda.matmul.allow_tf32 = True
+
+# The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
+torch.backends.cudnn.allow_tf32 = True
 
 
 
@@ -270,7 +278,10 @@ def trainCycle(image_datasets, model):
     optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
+    
+    if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
 
+    
     print("starting training")
     
     startTime = time.time()
@@ -362,30 +373,39 @@ def trainCycle(image_datasets, model):
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
-                    
-                    #if phase == 'train':
-                        #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                    
-                    outputs = model(imageBatch)
-                    #outputs = model(imageBatch).logits
-                    #if phase == 'val':
-                    preds = torch.argmax(outputs, dim=1)
-                    
-                    samples += len(images)
-                    correct += sum(preds == tagBatch)
-                    tagsOneHot = torch.eye(len(classes), device=device)[tagBatch]
-                    
-                    #print(tagBatch.shape)
-                    
-                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
+                        
+                        #if phase == 'train':
+                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                        
+                        outputs = model(imageBatch)
+                        #outputs = model(imageBatch).logits
+                        #if phase == 'val':
+                        preds = torch.argmax(outputs, dim=1)
+                        
+                        samples += len(images)
+                        correct += sum(preds == tagBatch)
+                        tagsOneHot = torch.eye(len(classes), device=device)[tagBatch]
+                        
+                        #print(tagBatch.shape)
+                        
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
-                    # backward + optimize only if in training phase
-                    if phase == 'train' and (loss.isnan() == False):
-                        loss.backward()
-                        if((i + 1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                            optimizer.step()
-                            optimizer.zero_grad()
+                        # backward + optimize only if in training phase
+                        if phase == 'train' and (loss.isnan() == False):
+                            if (FLAGS['use_scaler'] == True):   # cuda gpu case
+                                scaler.scale(loss).backward()   #lotta time spent here
+                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    scaler.step(optimizer)
+                                    scaler.update()
+                                    optimizer.zero_grad()
+                            else:                               # apple gpu/cpu case
+                                loss.backward()
+                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    optimizer.step()
+                                    optimizer.zero_grad()
                                     
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/(samples+1e-8))
