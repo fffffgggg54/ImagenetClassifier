@@ -375,6 +375,8 @@ def trainCycle(image_datasets, model):
                     correct += sum(preds == tagBatch)
                     tagBatch = torch.eye(len(classes), device=device)[tagBatch]
                     
+                    print(tagBatch.shape)
+                    
                     loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
                     # backward + optimize only if in training phase
