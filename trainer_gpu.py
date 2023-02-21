@@ -27,6 +27,7 @@ import timm.optim
 import transformers
 
 import timm.layers.ml_decoder as ml_decoder
+import timm.layers
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossSingleLabel
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data.random_erasing import RandomErasing
@@ -48,7 +49,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
 torch.backends.cudnn.allow_tf32 = True
 
-
+timm.layers.fast_norm.set_fast_norm(enable=True)
 
 # ================================================
 #           CONFIGURATION OPTIONS
