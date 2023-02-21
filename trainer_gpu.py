@@ -34,6 +34,9 @@ from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
 from timm.data.mixup import FastCollateMixup, Mixup
 
+from PIL import Image, ImageOps, ImageDraw
+import PIL
+
 
 
 
