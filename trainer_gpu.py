@@ -87,8 +87,8 @@ FLAGS['num_workers'] = 30
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 1024
-FLAGS['gradient_accumulation_iterations'] = 2
+FLAGS['batch_size'] = 512
+FLAGS['gradient_accumulation_iterations'] = 4
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -103,6 +103,8 @@ FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = True
+FLAGS['progressiveSizeStartRatio'] = 0.7
+FLAGS['progressiveAugStartRatio'] = 1.8
 
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -305,7 +307,8 @@ def trainCycle(image_datasets, model):
         if FLAGS['progressiveImageSize'] == True:
                     
                     
-            dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+            dynamicResizeDim = int(FLAGS['image_size'] * FLAGS['progressiveSizeStart'] + epoch * \
+                (FLAGS['image_size']-FLAGS['image_size'] * FLAGS['progressiveSizeStart'])/FLAGS['num_epochs'])
         else:
             dynamicResizeDim = FLAGS['image_size']
         
@@ -313,7 +316,7 @@ def trainCycle(image_datasets, model):
         print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
         
         trainTransforms = transforms.Compose([transforms.Resize((dynamicResizeDim, dynamicResizeDim)),
-            transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * 1.6)),
+            transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
             transforms.RandomHorizontalFlip(),
             transforms.TrivialAugmentWide(),
