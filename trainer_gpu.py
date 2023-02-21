@@ -104,7 +104,7 @@ FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = True
-FLAGS['progressiveSizeStart'] = 0.7
+FLAGS['progressiveSizeStart'] = 0.6
 FLAGS['progressiveAugRatio'] = 1.8
 
 
