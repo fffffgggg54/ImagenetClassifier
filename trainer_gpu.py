@@ -261,7 +261,7 @@ def trainCycle(image_datasets, model):
 
     #criterion = SoftTargetCrossEntropy()
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
-    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0., reduction = 'sum')
+    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0., reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
