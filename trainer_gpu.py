@@ -139,6 +139,12 @@ class CutoutPIL(object):
 
         return x
 
+def create_dir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+        print("Created Directory : ", dir)
+    return dir
+
 def getData():
     startTime = time.time()
 
@@ -355,7 +361,7 @@ def trainCycle(image_datasets, model):
                 
                 
             if phase == 'val':
-                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+                modelDir = create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
