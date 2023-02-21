@@ -23,10 +23,11 @@ import torch_optimizer
 import multiprocessing
 
 import timm
+import timm.optim
 import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, AsymmetricLossSingleLabel
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
@@ -52,7 +53,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/custVit/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 
 
@@ -60,7 +61,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/custVit/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_AMP'] = True
@@ -69,7 +70,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 14
+FLAGS['num_workers'] = 24
 
 
 # training config
@@ -81,7 +82,7 @@ FLAGS['gradient_accumulation_iterations'] = 8
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 6
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
@@ -89,20 +90,44 @@ FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
+FLAGS['image_size'] = 224
+FLAGS['progressiveImageSize'] = True
+
+
+FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
+
 # debugging config
 
 FLAGS['verbose_debug'] = False
 FLAGS['skip_test_set'] = False
 FLAGS['stepsPerPrintout'] = 50
+FLAGS['val'] = False
 
 classes = None
 
 
 
-'''
-serverProcessPool = []
-workQueue = multiprocessing.Queue()
-'''
+class CutoutPIL(object):
+    def __init__(self, cutout_factor=0.5):
+        self.cutout_factor = cutout_factor
+
+    def __call__(self, x):
+        img_draw = ImageDraw.Draw(x)
+        h, w = x.size[0], x.size[1]  # HWC
+        h_cutout = int(self.cutout_factor * h + 0.5)
+        w_cutout = int(self.cutout_factor * w + 0.5)
+        y_c = np.random.randint(h)
+        x_c = np.random.randint(w)
+
+        y1 = np.clip(y_c - h_cutout // 2, 0, h)
+        y2 = np.clip(y_c + h_cutout // 2, 0, h)
+        x1 = np.clip(x_c - w_cutout // 2, 0, w)
+        x2 = np.clip(x_c + w_cutout // 2, 0, w)
+        fill_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        img_draw.rectangle([x1, y1, x2, y2], fill=fill_color)
+
+        return x
+
 def getData():
     startTime = time.time()
 
@@ -224,20 +249,22 @@ def trainCycle(image_datasets, model):
     device = FLAGS['device']
     device2 = FLAGS['device2']
     
-    
+    memory_format = torch.channels_last
     
     model = model.to(device)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = SoftTargetCrossEntropy()
+    #criterion = SoftTargetCrossEntropy()
+    # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
+    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0., reduction = 'sum')
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
 
@@ -251,8 +278,33 @@ def trainCycle(image_datasets, model):
     for epoch in range(FLAGS['resume_epoch'], FLAGS['num_epochs']):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
+        
+        
+        
+        
+        if FLAGS['progressiveImageSize'] == True:
+                    
+                    
+            dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+        else:
+            dynamicResizeDim = FLAGS['image_size']
+        
+        
+        print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
+        
+        trainTransforms = transforms.Compose([transforms.Resize(dynamicResizeDim),
+            transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * 1.6)),
+            #transforms.RandAugment(),
+            transforms.RandomHorizontalFlip(),
+            transforms.TrivialAugmentWide(),
+            CutoutPIL(cutout_factor=0.2),
+            transforms.ToTensor(),
+            transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+        ])
 
-        image_datasets['train'].transform = transforms.Compose([transforms.Resize((256)),
+        
+        '''
+        trainTransformsRSB = transforms.Compose([transforms.Resize((256)),
             transforms.RandomHorizontalFlip(),
             RandomResizedCropAndInterpolation(size=224),
             rand_augment_transform(
@@ -267,11 +319,15 @@ def trainCycle(image_datasets, model):
             #transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
+        '''
         
-        image_datasets['val'].transform = transforms.Compose([transforms.Resize((256,256)),
+        
+        image_datasets['train'].transform = trainTransforms
+        
+        image_datasets['val'].transform = transforms.Compose([transforms.Resize(FLAGS['image_size'], interpolation = FLAGS['interpolation']),
+            transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
             transforms.ToTensor(),
-            transforms.RandomCrop(224),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
         ])
         
         for phase in ['train', 'val']:
@@ -321,7 +377,7 @@ def trainCycle(image_datasets, model):
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
                         loss.backward()
-                        if(i % FLAGS['gradient_accumulation_iterations'] == 0):
+                        if((i + 1) % FLAGS['gradient_accumulation_iterations'] == 0):
                             nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                             optimizer.step()
                             optimizer.zero_grad()
