@@ -236,6 +236,7 @@ def modelSetup(classes):
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'), strict=False)
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
     
     model.reset_classifier(len(classes))
     
@@ -367,6 +368,7 @@ def trainCycle(image_datasets, model):
             if phase == 'val':
                 modelDir = create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True):
