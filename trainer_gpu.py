@@ -89,7 +89,7 @@ FLAGS['num_workers'] = 30
 
 FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['gradient_accumulation_iterations'] = 8
 
 FLAGS['base_learning_rate'] = 3e-2
 FLAGS['base_batch_size'] = 256
