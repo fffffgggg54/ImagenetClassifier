@@ -261,7 +261,7 @@ def trainCycle(image_datasets, model):
     startTime = time.time()
 
     
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
@@ -385,12 +385,13 @@ def trainCycle(image_datasets, model):
                 
                 
 
-                imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
-                tagBatch = tags.to(device, non_blocking=True)
+                
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
+                        imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
+                        tagBatch = tags.to(device, non_blocking=True)
                         
                         #if phase == 'train':
                             #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
