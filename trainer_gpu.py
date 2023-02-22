@@ -318,9 +318,10 @@ def trainCycle(image_datasets, model):
         
         print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
         
-        trainTransforms = transforms.Compose([transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
+        trainTransforms = transforms.Compose([
+            transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.RandomHorizontalFlip(),
-            torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation'])
+            torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
             #transforms.TrivialAugmentWide(),
