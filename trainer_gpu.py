@@ -272,7 +272,7 @@ def trainCycle(image_datasets, model):
     device2 = FLAGS['device2']
     
     #memory_format = torch.channels_last
-    memory_format = torch.contiguous
+    memory_format = torch.contiguous_format
     
     model = model.to(device)
 
