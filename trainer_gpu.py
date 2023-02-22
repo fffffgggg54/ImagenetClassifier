@@ -88,11 +88,11 @@ FLAGS['num_workers'] = 30
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 256
+FLAGS['gradient_accumulation_iterations'] = 1
 
-FLAGS['base_learning_rate'] = 5e-3
-FLAGS['base_batch_size'] = 2048
+FLAGS['base_learning_rate'] = 3e-2
+FLAGS['base_batch_size'] = 256
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
@@ -105,7 +105,7 @@ FLAGS['finetune'] = False
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.6
-FLAGS['progressiveAugRatio'] = 3.0
+FLAGS['progressiveAugRatio'] = 2.0
 
 FLAGS['crop'] = 0.95
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -412,14 +412,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
                                     
