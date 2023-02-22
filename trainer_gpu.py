@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_250/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 
 
@@ -209,8 +209,8 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
-    model = timm.create_model('lcnet_250', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
+    #model = timm.create_model('lcnet_250', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
     
     
     
