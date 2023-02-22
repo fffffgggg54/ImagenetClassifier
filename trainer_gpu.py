@@ -89,7 +89,7 @@ FLAGS['num_workers'] = 30
 
 FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 8
+FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-2
 FLAGS['base_batch_size'] = 256
@@ -396,14 +396,16 @@ def trainCycle(image_datasets, model):
                         
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
+                        #if phase == 'val':
+                        preds = torch.argmax(outputs, dim=1)
                         
                         samples += len(images)
-                        correct += sum(torch.argmax(outputs, dim=1) == tagBatch)
-                        #tagsOneHot = torch.eye(len(classes), device=device)[tagBatch]
+                        correct += sum(preds == tagBatch)
+                        tagsOneHot = torch.eye(len(classes), device=device)[tagBatch]
                         
                         #print(tagBatch.shape)
                         
-                        loss = criterion(outputs, tagBatch)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
                         # backward + optimize only if in training phase
                         if phase == 'train' and (loss.isnan() == False):
