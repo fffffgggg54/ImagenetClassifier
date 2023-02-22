@@ -103,7 +103,7 @@ FLAGS['resume_epoch'] = 0
 FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
-FLAGS['progressiveImageSize'] = True
+FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.6
 FLAGS['progressiveAugRatio'] = 3.0
 
