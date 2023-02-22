@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_250/'
 
 
 
@@ -88,10 +88,10 @@ FLAGS['num_workers'] = 30
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 256
+FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 1
 
-FLAGS['base_learning_rate'] = 3e-2
+FLAGS['base_learning_rate'] = 1e-2
 FLAGS['base_batch_size'] = 256
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
@@ -102,7 +102,7 @@ FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
-FLAGS['image_size'] = 384
+FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = True
 FLAGS['progressiveSizeStart'] = 0.6
 FLAGS['progressiveAugRatio'] = 2.0
@@ -210,7 +210,7 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
-    model = timm.create_model('lcnet_400', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
+    model = timm.create_model('lcnet_250', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
     
     
     
