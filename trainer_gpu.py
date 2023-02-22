@@ -91,7 +91,7 @@ FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 3e-3
+FLAGS['base_learning_rate'] = 8e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
@@ -105,10 +105,11 @@ FLAGS['finetune'] = False
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = True
 FLAGS['progressiveSizeStart'] = 0.6
-FLAGS['progressiveAugRatio'] = 1.8
+FLAGS['progressiveAugRatio'] = 3.0
 
-
+FLAGS['crop'] = 0.95
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
+FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
 # debugging config
 
@@ -208,7 +209,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.1)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -279,7 +280,7 @@ def trainCycle(image_datasets, model):
 
     #criterion = SoftTargetCrossEntropy()
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
-    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0., reduction = 'mean')
+    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.1, reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -317,12 +318,13 @@ def trainCycle(image_datasets, model):
         
         print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
         
-        trainTransforms = transforms.Compose([transforms.Resize((dynamicResizeDim, dynamicResizeDim)),
+        trainTransforms = transforms.Compose([transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
+            transforms.RandomHorizontalFlip(),
+            torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation'])
             transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
-            transforms.RandomHorizontalFlip(),
-            transforms.TrivialAugmentWide(),
-            CutoutPIL(cutout_factor=0.2),
+            #transforms.TrivialAugmentWide(),
+            #CutoutPIL(cutout_factor=0.2),
             transforms.ToTensor(),
             transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
         ])
@@ -349,7 +351,8 @@ def trainCycle(image_datasets, model):
         
         image_datasets['train'].transform = trainTransforms
         
-        image_datasets['val'].transform = transforms.Compose([transforms.Resize(FLAGS['image_size'], interpolation = FLAGS['interpolation']),
+        image_datasets['val'].transform = transforms.Compose([
+            transforms.Resize(FLAGS['image_size_initial'], interpolation = FLAGS['interpolation']),
             transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
             transforms.ToTensor(),
             transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
@@ -408,14 +411,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
                                     
