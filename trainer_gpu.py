@@ -105,7 +105,7 @@ FLAGS['finetune'] = False
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = True
 FLAGS['progressiveSizeStart'] = 0.5
-FLAGS['progressiveAugRatio'] = 2.0
+FLAGS['progressiveAugRatio'] = 3.0
 
 FLAGS['crop'] = 0.95
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -209,7 +209,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
     #model = timm.create_model('lcnet_250', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
     
     
@@ -326,9 +326,9 @@ def trainCycle(image_datasets, model):
             transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.RandomHorizontalFlip(),
             torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
+            transforms.TrivialAugmentWide(),
             transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
-            #transforms.TrivialAugmentWide(),
             #CutoutPIL(cutout_factor=0.2),
             transforms.ToTensor(),
             transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
