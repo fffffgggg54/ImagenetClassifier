@@ -44,10 +44,10 @@ torch.backends.cudnn.benchmark = True
 
 # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
 # in PyTorch 1.12 and later.
-torch.backends.cuda.matmul.allow_tf32 = True
+#torch.backends.cuda.matmul.allow_tf32 = True
 
 # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
-torch.backends.cudnn.allow_tf32 = True
+#torch.backends.cudnn.allow_tf32 = True
 
 timm.layers.fast_norm.set_fast_norm(enable=True)
 
@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_150/'
 
 
 
@@ -73,23 +73,23 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_AMP'] = True
-FLAGS['use_scaler'] = True
+FLAGS['use_AMP'] = False
+FLAGS['use_scaler'] = False
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 30
+FLAGS['num_workers'] = 6
 
 
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 256
+FLAGS['gradient_accumulation_iterations'] = 8
 
 FLAGS['base_learning_rate'] = 5e-3
 FLAGS['base_batch_size'] = 2048
@@ -103,11 +103,11 @@ FLAGS['resume_epoch'] = 0
 FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
-FLAGS['progressiveImageSize'] = True
+FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.5
 FLAGS['progressiveAugRatio'] = 3.0
 
-FLAGS['crop'] = 0.95
+FLAGS['crop'] = 0.875
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
@@ -209,8 +209,8 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
-    #model = timm.create_model('lcnet_250', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
+    #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
+    model = timm.create_model('lcnet_150', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
     
     
@@ -275,7 +275,8 @@ def trainCycle(image_datasets, model):
     device = FLAGS['device']
     device2 = FLAGS['device2']
     
-    memory_format = torch.channels_last
+    #memory_format = torch.channels_last
+    memory_format = torch.contiguous_format
     
     model = model.to(device)
 
@@ -325,7 +326,7 @@ def trainCycle(image_datasets, model):
         trainTransforms = transforms.Compose([
             transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.RandomHorizontalFlip(),
-            torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
+            #torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.TrivialAugmentWide(),
             transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
