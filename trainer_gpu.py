@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_150/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_035/'
 
 
 
@@ -88,8 +88,8 @@ FLAGS['num_workers'] = 10
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 128
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['batch_size'] = 256
+FLAGS['gradient_accumulation_iterations'] = 8
 
 FLAGS['base_learning_rate'] = 5e-3
 FLAGS['base_batch_size'] = 2048
@@ -105,7 +105,7 @@ FLAGS['finetune'] = False
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.5
-FLAGS['progressiveAugRatio'] = 3.0
+FLAGS['progressiveAugRatio'] = 5.0
 
 FLAGS['crop'] = 0.875
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -210,7 +210,7 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
-    model = timm.create_model('lcnet_150', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
+    model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
     
     
@@ -327,7 +327,7 @@ def trainCycle(image_datasets, model):
             transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.RandomHorizontalFlip(),
             #torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
-            transforms.TrivialAugmentWide(),
+            #transforms.TrivialAugmentWide(),
             transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
             #CutoutPIL(cutout_factor=0.2),
