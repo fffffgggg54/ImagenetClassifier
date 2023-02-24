@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_035/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_150/'
 
 
 
@@ -82,7 +82,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['num_workers'] = 10
+FLAGS['num_workers'] = 5
 
 
 # training config
@@ -105,7 +105,7 @@ FLAGS['finetune'] = False
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.5
-FLAGS['progressiveAugRatio'] = 5.0
+FLAGS['progressiveAugRatio'] = 3.0
 
 FLAGS['crop'] = 0.875
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -210,7 +210,7 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
-    model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
+    model = timm.create_model('lcnet_150', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
     
     
@@ -289,9 +289,9 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
