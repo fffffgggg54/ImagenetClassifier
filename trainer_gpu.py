@@ -91,21 +91,21 @@ FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 128
 FLAGS['gradient_accumulation_iterations'] = 16
 
-FLAGS['base_learning_rate'] = 5e-3
+FLAGS['base_learning_rate'] = 3e-2
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 2e-2
+FLAGS['weight_decay'] = 4e-5
 
-FLAGS['resume_epoch'] = 4
+FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.5
-FLAGS['progressiveAugRatio'] = 3.0
+FLAGS['progressiveAugRatio'] = 2.0
 
 FLAGS['crop'] = 0.875
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -327,9 +327,9 @@ def trainCycle(image_datasets, model):
         
         trainTransforms = transforms.Compose([
             transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
-            transforms.RandomHorizontalFlip(),
             torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
-            transforms.TrivialAugmentWide(),
+            transforms.RandomHorizontalFlip(),
+            #transforms.TrivialAugmentWide(),
             transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
             #CutoutPIL(cutout_factor=0.2),
