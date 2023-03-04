@@ -283,9 +283,9 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = SoftTargetCrossEntropy()
+    #criterion = SoftTargetCrossEntropy()
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
-    #criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.05, reduction = 'mean')
+    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
