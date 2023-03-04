@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_150/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_035/'
 
 
 
@@ -82,30 +82,30 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['num_workers'] = 10
+FLAGS['num_workers'] = 20
 
 
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 256
+FLAGS['batch_size'] = 1024
 FLAGS['gradient_accumulation_iterations'] = 1
 
-FLAGS['base_learning_rate'] = 1e-2
+FLAGS['base_learning_rate'] = 1e-1
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 4e-5
+FLAGS['weight_decay'] = 1e-3
 
 FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
-FLAGS['progressiveImageSize'] = True
+FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.5
-FLAGS['progressiveAugRatio'] = 2.0
+FLAGS['progressiveAugRatio'] = 5.0
 
 FLAGS['crop'] = 0.875
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -210,7 +210,7 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
-    model = timm.create_model('lcnet_150', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.)
+    model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
     
     
