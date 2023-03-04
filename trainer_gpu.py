@@ -105,7 +105,7 @@ FLAGS['finetune'] = False
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
 FLAGS['progressiveSizeStart'] = 0.5
-FLAGS['progressiveAugRatio'] = 5.0
+FLAGS['progressiveAugRatio'] = 3.0
 
 FLAGS['crop'] = 0.875
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
@@ -285,8 +285,8 @@ def trainCycle(image_datasets, model):
 
     #criterion = SoftTargetCrossEntropy()
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
-    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.1, reduction = 'mean')
-    #criterion = nn.BCEWithLogitsLoss()
+    #criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.05, reduction = 'mean')
+    criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
