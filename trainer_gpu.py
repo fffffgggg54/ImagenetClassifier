@@ -87,16 +87,16 @@ FLAGS['num_workers'] = 20
 
 # training config
 
-FLAGS['num_epochs'] = 100
+FLAGS['num_epochs'] = 360
 FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 1e-1
+FLAGS['base_learning_rate'] = 0.8
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 1e-3
+FLAGS['weight_decay'] = 3e-5
 
 FLAGS['resume_epoch'] = 0
 
@@ -289,9 +289,9 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum = 0.9)
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     if (FLAGS['resume_epoch'] > 0):
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
