@@ -410,7 +410,7 @@ def trainCycle(image_datasets, model):
                         
                         samples += len(images)
                         #correct += sum(preds == tagBatch)
-                        correct += sum(preds * tagBatch) if phase == 'train' else sum(preds == tagBatch)
+                        correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
                         
                         #print(tagBatch.shape)
                         
