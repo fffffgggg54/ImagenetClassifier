@@ -411,7 +411,6 @@ def trainCycle(image_datasets, model):
                         samples += len(images)
                         #correct += sum(preds == tagBatch)
                         correct += sum(preds * tagBatch) if phase == 'train' else sum(preds == tagBatch)
-                        tagsOneHot = torch.eye(len(classes), device=device)[tagBatch]
                         
                         #print(tagBatch.shape)
                         
