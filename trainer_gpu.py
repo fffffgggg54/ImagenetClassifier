@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_035/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
 
 
 
@@ -209,8 +209,8 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
-    model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
+    #model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
     
     
@@ -268,7 +268,7 @@ def trainCycle(image_datasets, model):
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
-    #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
+    mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, label_smoothing=0.1)
     #dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
@@ -283,9 +283,9 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    #criterion = SoftTargetCrossEntropy()
+    criterion = SoftTargetCrossEntropy()
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
-    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
+    #criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -388,7 +388,8 @@ def trainCycle(image_datasets, model):
 
             loaderIterable = enumerate(dataloaders[phase])
             for i, (images, tags) in loaderIterable:
-                
+                if phase == 'train':
+                    images, tags = mixup(images, tags)
                 
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
@@ -398,8 +399,7 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         
-                        #if phase == 'train':
-                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                        
                         
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
