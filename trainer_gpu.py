@@ -115,7 +115,7 @@ FLAGS['image_size_initial'] = int(round(FLAGS['image_size'] // FLAGS['crop']))
 
 FLAGS['verbose_debug'] = False
 FLAGS['skip_test_set'] = False
-FLAGS['stepsPerPrintout'] = 500
+FLAGS['stepsPerPrintout'] = 50
 FLAGS['val'] = False
 
 classes = None
