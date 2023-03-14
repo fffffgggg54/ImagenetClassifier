@@ -404,10 +404,13 @@ def trainCycle(image_datasets, model):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         #if phase == 'val':
-                        preds = torch.argmax(outputs, dim=1)
+                        #preds = torch.argmax(outputs, dim=1)
+                        preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
+                        
                         
                         samples += len(images)
-                        correct += sum(preds == tagBatch)
+                        #correct += sum(preds == tagBatch)
+                        correct += sum(preds * tagBatch) if phase == 'train' else sum(preds == tagBatch)
                         tagsOneHot = torch.eye(len(classes), device=device)[tagBatch]
                         
                         #print(tagBatch.shape)
