@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_small_resnet26d_224/'
 
 
 
@@ -88,15 +88,15 @@ FLAGS['num_workers'] = 20
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 128
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['batch_size'] = 64
+FLAGS['gradient_accumulation_iterations'] = 32
 
-FLAGS['base_learning_rate'] = 8e-3
+FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 3e-3
+FLAGS['weight_decay'] = 1e-2
 
 FLAGS['resume_epoch'] = 0
 
@@ -209,7 +209,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.)
+    model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     #model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
     
@@ -289,8 +289,8 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum = 0.9)
-    #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum = 0.9)
+    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     if (FLAGS['resume_epoch'] > 0):
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
