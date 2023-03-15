@@ -125,6 +125,7 @@ classes = None
 from timm.models.layers import LayerNorm2d, to_2tuple
 from torch import Tensor
 from torch import linalg as LA
+import torch.nn.functional as F
 
 
 class Stem(nn.Module):
