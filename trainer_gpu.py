@@ -137,7 +137,7 @@ class Stem(nn.Module):
             self,
             in_chs=3,
             out_chs=96,
-            stride=4,
+            stride=16,
             norm_layer=LayerNorm2d,
     ):
         super().__init__()
