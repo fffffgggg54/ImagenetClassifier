@@ -147,9 +147,9 @@ class Stem(nn.Module):
         self.conv = nn.Conv2d(
             in_chs,
             out_chs,
-            kernel_size=stride*2-1,
+            kernel_size=(stride[0]*2-1, stride[1]*2-1),
             stride=stride,
-            padding=stride-1,
+            padding=(stride[0]-1, stride[1]-1),
         )
         self.norm = norm_layer(out_chs)
 
