@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/simpleViT/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/identityformer_s12/'
 
 
 
@@ -88,8 +88,8 @@ FLAGS['num_workers'] = 20
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 128
-FLAGS['gradient_accumulation_iterations'] = 8
+FLAGS['batch_size'] = 256
+FLAGS['gradient_accumulation_iterations'] = 4
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 1024
@@ -465,12 +465,12 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('identityformer_s12', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     #model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
 
-    model=ViT()
+    #model=ViT()
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -650,7 +650,8 @@ def trainCycle(image_datasets, model):
                 
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
-                tagBatch = tags.to(device, non_blocking=True)
+                tagBatch = tags.to(device, non_blocking=True) if phase == 'train' \
+                    else torch.zeros([batch_size, num_classes]).scatter_(1, labels.view(batch_size, 1), 1).to(device)
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
