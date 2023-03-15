@@ -370,7 +370,8 @@ class ViT(nn.Module):
 
         # B, C, H, W -> B, N, C
         x=self.cpe(x).flatten(2).transpose(1, 2)
-
+        
+        print(x.shape)
         x = self.blocks(x)
         
         x = x.mean(dim=1)
