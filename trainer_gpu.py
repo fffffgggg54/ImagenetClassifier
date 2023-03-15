@@ -88,15 +88,15 @@ FLAGS['num_workers'] = 20
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 192
-FLAGS['gradient_accumulation_iterations'] = 32
+FLAGS['batch_size'] = 128
+FLAGS['gradient_accumulation_iterations'] = 8
 
-FLAGS['base_learning_rate'] = 3e-3
-FLAGS['base_batch_size'] = 2048
+FLAGS['base_learning_rate'] = 1e-3
+FLAGS['base_batch_size'] = 1024
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 1e-2
+FLAGS['weight_decay'] = 1e-4
 
 FLAGS['resume_epoch'] = 0
 
@@ -341,7 +341,7 @@ class ViT(nn.Module):
         dim=384,
         num_heads=8,
         num_classes=1000,
-        depth = 8,
+        depth = 12,
         drop_path = 0.1,
         drop = 0.0
     ):
@@ -661,14 +661,15 @@ def trainCycle(image_datasets, model):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         #if phase == 'val':
-                        #preds = torch.argmax(outputs, dim=1)
-                        preds = torch.softmax(outputs.detach().clone(), dim=1) if phase == 'train' else torch.argmax(outputs.detach().clone(), dim=1)
-                        
-                        
-                        samples += len(images)
-                        #correct += sum(preds == tagBatch)
-                        correct += (preds * tagBatch.detach().clone()).sum() if phase == 'train' else sum(preds == tagBatch.detach().clone())
-                        
+                        with torch.no_grad():
+                            #preds = torch.argmax(outputs, dim=1)
+                            preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
+                            
+                            
+                            samples += len(images)
+                            #correct += sum(preds == tagBatch)
+                            correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
+                            
                         #print(tagBatch.shape)
                         
                         loss = criterion(outputs.to(device2), tagBatch.to(device2))
