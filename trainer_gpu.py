@@ -65,7 +65,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_small_resnet26d_224/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/simpleViT/'
 
 
 
