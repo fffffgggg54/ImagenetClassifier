@@ -88,7 +88,7 @@ FLAGS['num_workers'] = 20
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 192
 FLAGS['gradient_accumulation_iterations'] = 32
 
 FLAGS['base_learning_rate'] = 3e-3
@@ -370,8 +370,7 @@ class ViT(nn.Module):
 
         # B, C, H, W -> B, N, C
         x=self.cpe(x).flatten(2).transpose(1, 2)
-        
-        print(x.shape)
+
         x = self.blocks(x)
         
         x = x.mean(dim=1)
