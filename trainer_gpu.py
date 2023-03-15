@@ -499,7 +499,7 @@ def modelSetup(classes):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'), strict=False)
         
     
-    model.reset_classifier(len(classes))
+    #model.reset_classifier(len(classes))
     
     if FLAGS['finetune'] == True:
         for param in model.parameters():
