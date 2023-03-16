@@ -98,7 +98,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 1e-4
 
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 2
 
 FLAGS['finetune'] = False
 
@@ -651,7 +651,7 @@ def trainCycle(image_datasets, model):
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True) if phase == 'train' \
-                    else torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, labels.view(FLAGS['batch_size'], 1), 1).to(device)
+                    else torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1).to(device)
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
