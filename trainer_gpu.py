@@ -76,8 +76,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_AMP'] = False
-FLAGS['use_scaler'] = False
+FLAGS['use_AMP'] = True
+FLAGS['use_scaler'] = True
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
@@ -88,8 +88,8 @@ FLAGS['num_workers'] = 24
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 512
+FLAGS['gradient_accumulation_iterations'] = 2
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 1024
