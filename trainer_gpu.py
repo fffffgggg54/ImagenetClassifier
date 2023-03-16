@@ -73,7 +73,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_AMP'] = False
@@ -82,14 +82,14 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['num_workers'] = 20
+FLAGS['num_workers'] = 24
 
 
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
-FLAGS['gradient_accumulation_iterations'] = 8
+FLAGS['batch_size'] = 512
+FLAGS['gradient_accumulation_iterations'] = 2
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 1024
@@ -465,12 +465,12 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('poolformerv2_s12', pretrained=False, num_classes=len(classes))
+    #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     #model = timm.create_model('lcnet_035', pretrained=False, num_classes=len(classes), drop_rate = 0.0, drop_path_rate = 0.)
     
 
-    #model=ViT()
+    model=ViT()
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
