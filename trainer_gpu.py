@@ -88,8 +88,8 @@ FLAGS['num_workers'] = 24
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 2
+FLAGS['batch_size'] = 256
+FLAGS['gradient_accumulation_iterations'] = 4
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 1024
