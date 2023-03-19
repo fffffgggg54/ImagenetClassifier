@@ -151,7 +151,7 @@ class I_JEPA(nn.Module):
             current_context = x * context_mask
             context = self.backbone(current_context)
             if self.mask_pe == None:
-                self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.predictor_dim) * .02, device=x.device))
+                self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.predictor_dim).to(x.device) * .02))
             context = context + new_mask * (self.mask_token + self.mask_pe)
             context = new_mask * self.predictor(context)
             contexts.append(context)
