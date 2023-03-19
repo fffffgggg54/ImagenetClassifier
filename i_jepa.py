@@ -138,10 +138,10 @@ class I_JEPA(nn.Module):
         )
         
         target_unmasked = target_unmasked.reshape(B, 1, N, C)
-        target_masks = target_masks.reshape(B, self.num_targets_per_sample, N, 1)
+        target_masks = target_masks.reshape(B, self.num_targets_per_sample, N, 1).to(x.device)
         targets = target_unmasked * target_masks
         
-        context_mask = F.interpolate(context_mask.float(), (in_shape[-2], in_shape[-1]))
+        context_mask = F.interpolate(context_mask.float().to(x.device), (in_shape[-2], in_shape[-1]))
 
         contexts = []
         for target_mask in target_masks.transpose(0,1):
@@ -151,7 +151,7 @@ class I_JEPA(nn.Module):
             current_context = x * context_mask
             context = self.backbone(current_context)
             if self.mask_pe == None:
-                self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.predictor_dim) * .02))
+                self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.predictor_dim) * .02, device=x.device))
             context = context + new_mask * (self.mask_token + self.mask_pe)
             context = new_mask * self.predictor(context)
             contexts.append(context)
