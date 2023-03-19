@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import timm
 from timm.models.vision_transformer import Block
+from copy import deepcopy
 
 
 # some hints from https://github.com/gaasher/I-JEPA/blob/main/model.py
@@ -116,7 +117,8 @@ class I_JEPA(nn.Module):
         target_size=6,
     ):
         super().__init__()
-        self.backbone = backbone
+        self.context_encoder = backbone
+        self.target_encoder = deepcopy(backbone).to(backbone.device)
         self.predictor_dim = predictor_dim
 
         self.predictor = Predictor(self.backbone.num_features, predictor_dim, predictor_num_heads)
@@ -161,8 +163,3 @@ class I_JEPA(nn.Module):
         return targets, contexts
             
             
-            
-        
-        
-        
-    
