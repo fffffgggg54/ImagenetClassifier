@@ -118,7 +118,7 @@ class I_JEPA(nn.Module):
     ):
         super().__init__()
         self.context_encoder = backbone
-        self.target_encoder = deepcopy(backbone).to(backbone)
+        self.target_encoder = deepcopy(backbone)
         self.predictor_dim = predictor_dim
 
         self.predictor = Predictor(self.backbone.num_features, predictor_dim, predictor_num_heads)
