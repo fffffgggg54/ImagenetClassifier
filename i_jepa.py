@@ -160,7 +160,7 @@ class I_JEPA(nn.Module):
             contexts.append(context)
         
         contexts = torch.stack(contexts).transpose(0,1)
-        targets = predictor.proj(targets)
+        targets = self.predictor.proj(targets)
             
         return targets, contexts
             
