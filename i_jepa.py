@@ -130,7 +130,7 @@ class I_JEPA(nn.Module):
         
     def forward(self, x):
         in_shape = x.shape
-        target_unmasked = self.backbone(x)
+        target_unmasked = self.target_encoder(x)
         # only bnc for now
         B, N, C = target_unmasked.shape
         context_mask, target_masks = get_masks(
@@ -151,7 +151,7 @@ class I_JEPA(nn.Module):
             new_mask = target_mask.reshape(mask_shape[0], mask_shape[1], 1)
             
             current_context = x * context_mask
-            context = self.backbone(current_context)
+            context = self.context_encoder(current_context)
             if self.mask_pe == None:
                 self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.predictor_dim).to(x.device) * .02))
             context = context + new_mask * (self.mask_token + self.mask_pe)
