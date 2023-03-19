@@ -121,7 +121,7 @@ class I_JEPA(nn.Module):
         self.target_encoder = deepcopy(backbone)
         self.predictor_dim = predictor_dim
 
-        self.predictor = Predictor(self.backbone.num_features, predictor_dim, predictor_num_heads)
+        self.predictor = Predictor(backbone.num_features, predictor_dim, predictor_num_heads)
         
         self.num_targets_per_sample = num_targets_per_sample
         self.target_size = target_size
