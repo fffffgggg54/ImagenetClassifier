@@ -89,8 +89,8 @@ FLAGS['num_workers'] = 10
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 8
-FLAGS['gradient_accumulation_iterations'] = 128
+FLAGS['batch_size'] = 32
+FLAGS['gradient_accumulation_iterations'] = 32
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 1024
@@ -211,7 +211,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
-    model = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
+    model = timm.create_model('vit_base_patch32_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
     model = I_JEPA(model)
     
 

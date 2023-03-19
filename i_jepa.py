@@ -30,7 +30,7 @@ class Predictor(nn.Module):
     ):
         super().__init__()
         
-        self.proj = nn.Linear(in_dim, out_dim)
+        self.proj = nn.Linear(in_dim, out_dim, bias=False)
         
         # https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
@@ -128,6 +128,7 @@ class I_JEPA(nn.Module):
         self.target_size = target_size
         self.mask_token = nn.Parameter(torch.randn(1, 1, self.encoder_dim))
         self.mask_pe = None
+        self.proj = nn.Linear(backbone.num_features, self.predictor_dim, bias=False)
         
     def forward(self, x):
         in_shape = x.shape
@@ -160,7 +161,7 @@ class I_JEPA(nn.Module):
             contexts.append(context)
         
         contexts = torch.stack(contexts).transpose(0,1)
-        targets = self.predictor.proj(targets)
+        targets = self.proj(targets)
             
         return targets, contexts
             
