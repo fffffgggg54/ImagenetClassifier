@@ -126,7 +126,7 @@ class I_JEPA(nn.Module):
         
         self.num_targets_per_sample = num_targets_per_sample
         self.target_size = target_size
-        self.mask_token = nn.Parameter(torch.randn(1, 1, self.predictor_dim))
+        self.mask_token = nn.Parameter(torch.randn(1, 1, self.encoder_dim))
         self.mask_pe = None
         
     def forward(self, x):
