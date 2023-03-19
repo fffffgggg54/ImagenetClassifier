@@ -74,11 +74,11 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_AMP'] = True
-FLAGS['use_scaler'] = True
+FLAGS['use_AMP'] = False
+FLAGS['use_scaler'] = False
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
@@ -89,8 +89,8 @@ FLAGS['num_workers'] = 10
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['batch_size'] = 32
+FLAGS['gradient_accumulation_iterations'] = 32
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 1024
@@ -211,7 +211,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
-    model = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
+    model = timm.create_model('vit_small_patch32_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
     model = I_JEPA(model)
     
 
