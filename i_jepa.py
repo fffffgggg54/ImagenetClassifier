@@ -145,7 +145,7 @@ class I_JEPA(nn.Module):
         in_shape = x.shape
         target_unmasked = self.target_encoder(x)
         
-        with torch.autocast(enabled=False):
+        with torch.cuda.amp.autocast(enabled=False):
             # only bnc for now
             B, N, C = target_unmasked.shape
             context_mask, target_masks = get_masks(
@@ -171,7 +171,7 @@ class I_JEPA(nn.Module):
             mask_shape = target_mask.shape
             new_mask = target_mask.reshape(mask_shape[0], mask_shape[1], 1)
             
-            with torch.autocast(enabled=False):
+            with torch.cuda.amp.autocast(enabled=False):
                 # learned PE, randomly initialized during first pass and using dim of input for flexibility
                 if self.mask_pe == None:
                     self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02))
