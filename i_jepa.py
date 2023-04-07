@@ -11,6 +11,8 @@ from copy import deepcopy
 
 
 # based on https://github.com/gaasher/I-JEPA/blob/main/model.py
+# transformer predictor as described in paper, with a linear layer
+# to map from model's output dim to predictor dim
 class Predictor(nn.Module):
     def __init__(
         self,
@@ -61,6 +63,7 @@ class Predictor(nn.Module):
 
 #works with 2d shape
 #some performance to be had
+# random selection of k patches instead of 
 def generate_random_mask(shape, target_size):
     mask = torch.randn(shape).flatten()
     _, idx = torch.topk(mask, target_size)
@@ -69,7 +72,7 @@ def generate_random_mask(shape, target_size):
     mask = mask.reshape(shape)
     return mask
     
-
+# TODO "sample a single block ... with a random scale in the range (0.85,1.0) and unit aspect ratio"
 def get_masks( 
     target_shape,
     num_targets_per_sample=4,
@@ -79,26 +82,30 @@ def get_masks(
     out_size=None,
 ):
     batch_size = target_shape[0]
+    # out_size is the dims of model's final output features
     if out_size:
         assert isinstance(out_size, (list, tuple))
     elif target_shape[1]**0.5%1==0:
         out_size = (int(target_shape[1]**0.5), int(target_shape[1]**0.5))
     else:
         raise Exception('masker got invalid input, go debug')
-        
+    
+    # random tokens
     if target_size:
         target_masks = []
         for sample in range(batch_size):
             sample_masks=[]
-            # get some amount of masks for each sample
+            # sample random tokens
             for mask in range(num_targets_per_sample):
                 sample_masks.append(generate_random_mask(out_size, target_size))
             target_masks.append(torch.stack(sample_masks))
         # target masks ends as [B, num_targets_per_sample, *out_size]
         target_masks = torch.stack(target_masks)
+        # mask off context whenever there is a token in the target mask
+        # ugly expression but wtv
         context_mask = (target_masks.sum(dim=1) >= 1).logical_not().reshape(batch_size, 1, out_size[0], out_size[1])
         target_masks = target_masks.flatten(2)
-        
+    # rectangular masks TODO
     else:
         raise Exception('rectangular targets not supported rn D:')
         
@@ -117,6 +124,9 @@ class I_JEPA(nn.Module):
         target_size=6,
     ):
         super().__init__()
+        
+        # TODO mess with shared weights
+        # TODO mess with diff backbones
         self.context_encoder = backbone
         self.target_encoder = deepcopy(backbone)
         self.predictor_dim = predictor_dim
@@ -145,18 +155,25 @@ class I_JEPA(nn.Module):
         target_masks = target_masks.reshape(B, self.num_targets_per_sample, N, 1).to(x.device)
         targets = target_unmasked * target_masks
         
+        #[B, num_targets, N, C]
+        
         context_mask = F.interpolate(context_mask.float().to(x.device), (in_shape[-2], in_shape[-1]))
-
+        
+        context_enc_input = x * context_mask
+        context_enc_output = self.context_encoder(context_enc_input)
+        
         contexts = []
         for target_mask in target_masks.transpose(0,1):
             mask_shape = target_mask.shape
             new_mask = target_mask.reshape(mask_shape[0], mask_shape[1], 1)
-            
-            current_context = x * context_mask
-            context = self.context_encoder(current_context)
+
+            # learned PE, randomly initialized during first pass and using dim of input for flexibility
             if self.mask_pe == None:
                 self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02))
-            context = context + new_mask * (self.mask_token + self.mask_pe)
+            
+            # add prediction masks to tokens corresponding to each target mask in the encoded context
+            context = context_enc_output + new_mask * (self.mask_token + self.mask_pe)
+            
             context = new_mask * self.predictor(context)
             contexts.append(context)
         
