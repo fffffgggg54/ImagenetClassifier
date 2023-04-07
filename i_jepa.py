@@ -142,10 +142,11 @@ class I_JEPA(nn.Module):
         self.proj = nn.Linear(backbone.num_features, self.predictor_dim, bias=False)
         
     def forward(self, x):
-        in_shape = x.shape
-        target_unmasked = self.target_encoder(x)
-        
         with torch.cuda.amp.autocast(enabled=False):
+
+            in_shape = x.shape
+            target_unmasked = self.target_encoder(x)
+            
             # only bnc for now
             B, N, C = target_unmasked.shape
             context_mask, target_masks = get_masks(
@@ -163,15 +164,14 @@ class I_JEPA(nn.Module):
             context_mask = F.interpolate(context_mask.float().to(x.device), (in_shape[-2], in_shape[-1]))
             
             context_enc_input = x * context_mask
-        
-        context_enc_output = self.context_encoder(context_enc_input)
-        
-        contexts = []
-        for target_mask in target_masks.transpose(0,1):
-            mask_shape = target_mask.shape
-            new_mask = target_mask.reshape(mask_shape[0], mask_shape[1], 1)
             
-            with torch.cuda.amp.autocast(enabled=False):
+            context_enc_output = self.context_encoder(context_enc_input)
+            
+            contexts = []
+            for target_mask in target_masks.transpose(0,1):
+                mask_shape = target_mask.shape
+                new_mask = target_mask.reshape(mask_shape[0], mask_shape[1], 1)
+                
                 # learned PE, randomly initialized during first pass and using dim of input for flexibility
                 if self.mask_pe == None:
                     self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02))
@@ -181,10 +181,10 @@ class I_JEPA(nn.Module):
             
                 context = new_mask * self.predictor(context)
                 contexts.append(context)
-        
-        contexts = torch.stack(contexts).transpose(0,1)
-        targets = self.proj(targets)
             
-        return targets, contexts
+            contexts = torch.stack(contexts).transpose(0,1)
+            targets = self.proj(targets)
+                
+            return targets, contexts
             
             
