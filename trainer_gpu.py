@@ -77,7 +77,7 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_AMP'] = False
+FLAGS['use_AMP'] = True
 FLAGS['use_scaler'] = FLAGS['use_AMP']
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
