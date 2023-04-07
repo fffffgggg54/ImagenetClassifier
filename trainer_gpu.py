@@ -400,30 +400,30 @@ def trainCycle(image_datasets, model):
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
+                    
+                        
+                        
+                        
+                    outputs = model(imageBatch)
+                    #outputs = model(imageBatch).logits
+                    #if phase == 'val':
+                    '''
+                    with torch.no_grad():
+                        #preds = torch.argmax(outputs, dim=1)
+                        preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
+                        
+                        
+                        samples += len(images)
+                        #correct += sum(preds == tagBatch)
+                        correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
+                    '''    
+                    #print(tagBatch.shape)
+                    #if phase == 'val':
+                    #    tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
+                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        
-                        
-                        
-                        outputs = model(imageBatch)
-                        #outputs = model(imageBatch).logits
-                        #if phase == 'val':
-                        '''
-                        with torch.no_grad():
-                            #preds = torch.argmax(outputs, dim=1)
-                            preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
-                            
-                            
-                            samples += len(images)
-                            #correct += sum(preds == tagBatch)
-                            correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
-                        '''    
-                        #print(tagBatch.shape)
-                        #if phase == 'val':
-                        #    tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-
                         loss = criterion(outputs[0], outputs[1])
-                        
+                    
 
                         # backward + optimize only if in training phase
                         if phase == 'train' and (loss.isnan() == False):
