@@ -179,8 +179,8 @@ class I_JEPA(nn.Module):
                 # add prediction masks to tokens corresponding to each target mask in the encoded context
                 context = context_enc_output + new_mask * (self.mask_token + self.mask_pe)
             
-            context = new_mask * self.predictor(context)
-            contexts.append(context)
+                context = new_mask * self.predictor(context)
+                contexts.append(context)
         
         contexts = torch.stack(contexts).transpose(0,1)
         targets = self.proj(targets)
