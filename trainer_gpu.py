@@ -285,7 +285,7 @@ def trainCycle(image_datasets, model):
     
 
     #criterion = SoftTargetCrossEntropy()
-    criterion = nn.MSELoss()
+    criterion = nn.MSELoss(reduction='sum')
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
     #criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
