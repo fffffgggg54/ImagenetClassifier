@@ -66,7 +66,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/IJEPA_small/'
 
 
 
@@ -99,7 +99,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 1e-2
 
-FLAGS['resume_epoch'] = 0
+FLAGS['resume_epoch'] = 1
 
 FLAGS['finetune'] = False
 
@@ -457,8 +457,8 @@ def trainCycle(image_datasets, model):
 
                 if phase == 'train':
                     scheduler.step()
-            if phase == 'val':
-                print(f'top-1: {100 * (correct/samples)}%')
+            #if phase == 'val':
+            #    print(f'top-1: {100 * (correct/samples)}%')
         
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
