@@ -145,7 +145,7 @@ class I_JEPA(nn.Module):
         
         in_shape = x.shape
         target_unmasked = self.target_encoder(x)
-        if len(x.shape) == 4:
+        if len(target_unmasked.shape) == 4:
             target_unmasked = target_unmasked.flatten(2).transpose(1, 2)  # BCHW -> BNC
         
         
