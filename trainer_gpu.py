@@ -74,10 +74,10 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/IJEPA_small/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_AMP'] = False
+FLAGS['use_AMP'] = True
 FLAGS['use_scaler'] = FLAGS['use_AMP']
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
@@ -211,7 +211,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
-    model = timm.create_model('vit_small_patch32_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
+    model = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
     model = I_JEPA(model)
     
 
@@ -430,14 +430,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
                                     
