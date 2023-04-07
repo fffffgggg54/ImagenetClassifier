@@ -423,6 +423,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                         
                         loss = criterion(outputs[0], outputs[1])
+                        print(str(outputs[0].sum()) + str(outputs[1].sum()))
 
                         # backward + optimize only if in training phase
                         if phase == 'train' and (loss.isnan() == False):
