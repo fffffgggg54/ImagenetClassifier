@@ -142,11 +142,14 @@ class I_JEPA(nn.Module):
         self.proj = nn.Linear(backbone.num_features, self.predictor_dim, bias=False)
         
     def forward(self, x):
-
+        
         in_shape = x.shape
         target_unmasked = self.target_encoder(x)
+        if len(x.shape) == 4:
+            target_unmasked = target_unmasked.flatten(2).transpose(1, 2)  # BCHW -> BNC
         
-        # only bnc for now
+        
+        
         B, N, C = target_unmasked.shape
         context_mask, target_masks = get_masks(
             target_unmasked.shape, 
@@ -165,6 +168,8 @@ class I_JEPA(nn.Module):
         context_enc_input = x * context_mask
         
         context_enc_output = self.context_encoder(context_enc_input)
+        if len(x.shape) == 4:
+            target_unmasked = target_unmasked.flatten(2).transpose(1, 2)  # BCHW -> BNC
         
         contexts = []
         for target_mask in target_masks.transpose(0,1):
