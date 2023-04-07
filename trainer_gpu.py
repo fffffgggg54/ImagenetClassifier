@@ -423,7 +423,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                         
                         loss = criterion(outputs[0], outputs[1])
-                        print(str(outputs[0].sum()) + str(outputs[1].sum()))
+                        
 
                         # backward + optimize only if in training phase
                         if phase == 'train' and (loss.isnan() == False):
@@ -443,6 +443,10 @@ def trainCycle(image_datasets, model):
                                     
                 if i % stepsPerPrintout == 0:
                     #accuracy = 100 * (correct/(samples+1e-8))
+                    
+                    print(outputs[0])
+                    print(outputs[1])
+                    
                     accuracy = loss
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
