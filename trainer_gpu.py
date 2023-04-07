@@ -211,7 +211,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
-    model = timm.create_model('vit_base_patch32_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
+    model = timm.create_model('vit_small_patch32_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
     model = I_JEPA(model)
     
 
@@ -444,8 +444,8 @@ def trainCycle(image_datasets, model):
                 if i % stepsPerPrintout == 0:
                     #accuracy = 100 * (correct/(samples+1e-8))
                     
-                    print(outputs[0])
-                    print(outputs[1])
+                    #print(outputs[0])
+                    #print(outputs[1])
                     
                     accuracy = loss
 
