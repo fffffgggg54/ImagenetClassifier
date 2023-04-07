@@ -50,7 +50,7 @@ torch.backends.cudnn.benchmark = True
 # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
 #torch.backends.cudnn.allow_tf32 = True
 
-timm.layers.fast_norm.set_fast_norm(enable=True)
+timm.layers.fast_norm.set_fast_norm(enable=False)
 
 # ================================================
 #           CONFIGURATION OPTIONS
@@ -421,9 +421,8 @@ def trainCycle(image_datasets, model):
                         #if phase == 'val':
                         #    tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        with torch.cuda.amp.autocast(enabled=False):
 
-                            loss = criterion(outputs[0], outputs[1])
+                        loss = criterion(outputs[0], outputs[1])
                         
 
                         # backward + optimize only if in training phase
