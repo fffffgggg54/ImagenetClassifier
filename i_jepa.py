@@ -10,7 +10,7 @@ from timm.models.vision_transformer import Block
 from copy import deepcopy
 
 
-# some hints from https://github.com/gaasher/I-JEPA/blob/main/model.py
+# based on https://github.com/gaasher/I-JEPA/blob/main/model.py
 class Predictor(nn.Module):
     def __init__(
         self,
