@@ -113,7 +113,7 @@ def get_masks(
     
     return context_mask, target_masks
     
-    
+# FIXME doesn't converge when using autocast
 class I_JEPA(nn.Module):
     def __init__(
         self,
@@ -144,36 +144,40 @@ class I_JEPA(nn.Module):
     def forward(self, x):
         in_shape = x.shape
         target_unmasked = self.target_encoder(x)
-        # only bnc for now
-        B, N, C = target_unmasked.shape
-        context_mask, target_masks = get_masks(
-            target_unmasked.shape, 
-            num_targets_per_sample=self.num_targets_per_sample,
-            target_size = self.target_size
-        )
         
-        target_unmasked = target_unmasked.reshape(B, 1, N, C)
-        target_masks = target_masks.reshape(B, self.num_targets_per_sample, N, 1).to(x.device)
-        targets = target_unmasked * target_masks
+        with torch.autocast(enabled=False):
+            # only bnc for now
+            B, N, C = target_unmasked.shape
+            context_mask, target_masks = get_masks(
+                target_unmasked.shape, 
+                num_targets_per_sample=self.num_targets_per_sample,
+                target_size = self.target_size
+            )
         
-        #[B, num_targets, N, C]
+            target_unmasked = target_unmasked.reshape(B, 1, N, C)
+            target_masks = target_masks.reshape(B, self.num_targets_per_sample, N, 1).to(x.device)
+            targets = target_unmasked * target_masks
+            
+            #[B, num_targets, N, C]
+            
+            context_mask = F.interpolate(context_mask.float().to(x.device), (in_shape[-2], in_shape[-1]))
+            
+            context_enc_input = x * context_mask
         
-        context_mask = F.interpolate(context_mask.float().to(x.device), (in_shape[-2], in_shape[-1]))
-        
-        context_enc_input = x * context_mask
         context_enc_output = self.context_encoder(context_enc_input)
         
         contexts = []
         for target_mask in target_masks.transpose(0,1):
             mask_shape = target_mask.shape
             new_mask = target_mask.reshape(mask_shape[0], mask_shape[1], 1)
-
-            # learned PE, randomly initialized during first pass and using dim of input for flexibility
-            if self.mask_pe == None:
-                self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02))
             
-            # add prediction masks to tokens corresponding to each target mask in the encoded context
-            context = context_enc_output + new_mask * (self.mask_token + self.mask_pe)
+            with torch.autocast(enabled=False):
+                # learned PE, randomly initialized during first pass and using dim of input for flexibility
+                if self.mask_pe == None:
+                    self.mask_pe = nn.Parameter((torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02))
+                
+                # add prediction masks to tokens corresponding to each target mask in the encoded context
+                context = context_enc_output + new_mask * (self.mask_token + self.mask_pe)
             
             context = new_mask * self.predictor(context)
             contexts.append(context)
