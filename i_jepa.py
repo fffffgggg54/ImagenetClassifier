@@ -144,7 +144,8 @@ class I_JEPA(nn.Module):
     def forward(self, x):
 
         in_shape = x.shape
-        target_unmasked = self.target_encoder(x)
+        with torch.cuda.amp.autocast():
+            target_unmasked = self.target_encoder(x)
         
         # only bnc for now
         B, N, C = target_unmasked.shape
@@ -163,8 +164,8 @@ class I_JEPA(nn.Module):
         context_mask = F.interpolate(context_mask.float().to(x.device), (in_shape[-2], in_shape[-1]))
         
         context_enc_input = x * context_mask
-        
-        context_enc_output = self.context_encoder(context_enc_input)
+        with torch.cuda.amp.autocast():
+            context_enc_output = self.context_encoder(context_enc_input)
         
         contexts = []
         for target_mask in target_masks.transpose(0,1):
@@ -177,8 +178,8 @@ class I_JEPA(nn.Module):
             
             # add prediction masks to tokens corresponding to each target mask in the encoded context
             context = context_enc_output + new_mask * (self.mask_token + self.mask_pe)
-        
-            context = new_mask * self.predictor(context)
+            with torch.cuda.amp.autocast():
+                context = new_mask * self.predictor(context)
             contexts.append(context)
         
         contexts = torch.stack(contexts).transpose(0,1)
