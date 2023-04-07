@@ -128,7 +128,8 @@ class I_JEPA(nn.Module):
         # TODO mess with shared weights
         # TODO mess with diff backbones
         self.context_encoder = backbone
-        self.target_encoder = deepcopy(backbone)
+        #self.target_encoder = deepcopy(backbone)
+        self.target_encoder = backbone
         self.predictor_dim = predictor_dim
 
         self.predictor = Predictor(backbone.num_features, predictor_dim, predictor_num_heads)
