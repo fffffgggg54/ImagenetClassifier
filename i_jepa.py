@@ -179,7 +179,8 @@ class I_JEPA(nn.Module):
             # learned PE, randomly initialized during first pass and using dim of input for flexibility
             if self.has_uninitialized_params():
                 with torch.no_grad():
-                    self.mask_pe=nn.Parameter((torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02))
+                    self.mask_pe.materialize((1, mask_shape[1], self.encoder_dim))
+                    self.mask_pe=(torch.randn(1, mask_shape[1], self.encoder_dim).to(x.device) * .02)
             # add prediction masks to tokens corresponding to each target mask in the encoded context
             context = context_enc_output + new_mask * (self.mask_token + self.mask_pe)
         
