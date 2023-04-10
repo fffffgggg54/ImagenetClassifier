@@ -271,7 +271,7 @@ def trainCycle(image_datasets, model):
     
     # initialize jepa params
     with torch.no_grad():
-        model(torch.randn(FLAGS['batch_size'], 3, FLAGS['image_size'], FLAGS['image_size']))
+        model(torch.randn(FLAGS['batch_size'], 3, FLAGS['image_size'], FLAGS['image_size'], device=device))
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
