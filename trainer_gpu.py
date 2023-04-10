@@ -241,24 +241,11 @@ def modelSetup(classes):
     
     '''
     
-    if (FLAGS['resume_epoch'] > 0):
-        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+    
         
     
     #model.reset_classifier(len(classes))
     
-    if FLAGS['finetune'] == True:
-        for param in model.parameters():
-            param.requires_grad = False
-        if hasattr(model, "head"):
-            for param in model.head.parameters():
-                param.requires_grad = True
-        if hasattr(model, "classifier"):
-            for param in model.classifier.parameters():
-                param.requires_grad = True
-        if hasattr(model, "head_dist"):
-            for param in model.head_dist.parameters():
-                param.requires_grad = True
     
     return model
 
@@ -281,6 +268,26 @@ def trainCycle(image_datasets, model):
     memory_format = torch.contiguous_format
     
     model = model.to(device)
+    
+    # initialize jepa params
+    with torch.no_grad():
+        model(torch.randn(FLAGS['batch_size'], 3, FLAGS['image_size'], FLAGS['image_size']))
+    
+    if (FLAGS['resume_epoch'] > 0):
+        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+        
+    if FLAGS['finetune'] == True:
+        for param in model.parameters():
+            param.requires_grad = False
+        if hasattr(model, "head"):
+            for param in model.head.parameters():
+                param.requires_grad = True
+        if hasattr(model, "classifier"):
+            for param in model.classifier.parameters():
+                param.requires_grad = True
+        if hasattr(model, "head_dist"):
+            for param in model.head_dist.parameters():
+                param.requires_grad = True
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
