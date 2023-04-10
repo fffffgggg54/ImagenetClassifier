@@ -242,7 +242,7 @@ def modelSetup(classes):
     '''
     
     if (FLAGS['resume_epoch'] > 0):
-        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'), strict=False)
+        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
         
     
     #model.reset_classifier(len(classes))
