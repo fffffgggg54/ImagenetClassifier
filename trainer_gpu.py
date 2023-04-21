@@ -84,13 +84,13 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 24
+FLAGS['num_workers'] = 34
 
 
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['batch_size'] = 512
+FLAGS['batch_size'] = 768
 FLAGS['gradient_accumulation_iterations'] = 4
 
 FLAGS['base_learning_rate'] = 1e-3
