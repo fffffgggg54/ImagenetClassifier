@@ -93,10 +93,10 @@ FLAGS['num_epochs'] = 50
 FLAGS['batch_size'] = 768
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 1e-3
-FLAGS['base_batch_size'] = 2048
+FLAGS['base_learning_rate'] = 3e-2
+FLAGS['base_batch_size'] = 16384
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 5
+FLAGS['lr_warmup_epochs'] = 0
 
 FLAGS['weight_decay'] = 1e-5
 
@@ -313,8 +313,8 @@ def trainCycle(image_datasets, model):
     optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     if (FLAGS['resume_epoch'] > 0):
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
-    #scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
-    #scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
 
@@ -472,8 +472,8 @@ def trainCycle(image_datasets, model):
                     print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy))
                     torch.cuda.empty_cache()
 
-                #if phase == 'train':
-                #    scheduler.step()
+                if phase == 'train':
+                    scheduler.step()
             #if phase == 'val':
             #    print(f'top-1: {100 * (correct/samples)}%')
         
