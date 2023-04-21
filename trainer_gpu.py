@@ -208,13 +208,13 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('gernet_l', pretrained=True)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=0, global_pool='', drop_path_rate=0.1)
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
     # ijepa ft model instantiation
-    model = timm.create_model('gernet_l', num_classes=0)
-    model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
+    #model = timm.create_model('gernet_l', num_classes=0)
+    #model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
     for param in model.parameters():
         param.requires_grad = False
     model.reset_classifier(len(classes))
