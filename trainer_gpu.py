@@ -66,7 +66,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/IJEPA_base_patch16_224/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/IJEPA_gernet_l_lp/'
 
 
 
@@ -74,7 +74,7 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/IJEPA_base_patch16_224/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_AMP'] = False
@@ -102,7 +102,7 @@ FLAGS['weight_decay'] = 1e-2
 
 FLAGS['resume_epoch'] = 0
 
-FLAGS['finetune'] = False
+FLAGS['finetune'] = True
 
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
@@ -212,8 +212,14 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=0, global_pool='', drop_path_rate=0.1)
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
-    model = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
-    model = I_JEPA(model)
+    # ijepa ft model instantiation
+    model = timm.create_model('gernet_l', num_classes=0)
+    model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
+    model.reset_classifier(len(classes))
+    
+    
+    #model = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=0, drop_rate = 0.0, drop_path_rate = 0.2, global_pool='', class_token=False)
+    #model = I_JEPA(model)
     
 
     
@@ -292,8 +298,8 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    #criterion = SoftTargetCrossEntropy()
-    criterion = nn.MSELoss(reduction='sum')
+    criterion = SoftTargetCrossEntropy()
+    #criterion = nn.MSELoss(reduction='sum')
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
     #criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
@@ -415,7 +421,7 @@ def trainCycle(image_datasets, model):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         #if phase == 'val':
-                        '''
+                        
                         with torch.no_grad():
                             #preds = torch.argmax(outputs, dim=1)
                             preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
@@ -424,13 +430,13 @@ def trainCycle(image_datasets, model):
                             samples += len(images)
                             #correct += sum(preds == tagBatch)
                             correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
-                        '''    
+                           
                         #print(tagBatch.shape)
-                        #if phase == 'val':
-                        #    tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        if phase == 'val':
+                            tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
                         
-                        loss = criterion(outputs[0], outputs[1])
+                        #loss = criterion(outputs[0], outputs[1])
                         
 
                         # backward + optimize only if in training phase
@@ -450,12 +456,12 @@ def trainCycle(image_datasets, model):
                                     optimizer.zero_grad()
                                     
                 if i % stepsPerPrintout == 0:
-                    #accuracy = 100 * (correct/(samples+1e-8))
+                    accuracy = 100 * (correct/(samples+1e-8))
                     
                     #print(outputs[0])
                     #print(outputs[1])
                     
-                    accuracy = loss
+                    #accuracy = loss
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
