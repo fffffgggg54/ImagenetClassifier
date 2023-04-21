@@ -208,7 +208,7 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_l', pretrained=True)
+    model = timm.create_model('convformer_s18.sail_in22k', pretrained=True)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=0, global_pool='', drop_path_rate=0.1)
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
