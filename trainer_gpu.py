@@ -74,24 +74,24 @@ FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/IJEPA_gernet_l_lp/'
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_AMP'] = False
+FLAGS['use_AMP'] = True
 #FLAGS['use_scaler'] = FLAGS['use_AMP']
 FLAGS['use_scaler'] = True
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 10
+FLAGS['num_workers'] = 24
 
 
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 2048
+FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 2048
@@ -208,13 +208,13 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convformer_s18.sail_in22k', pretrained=True)
+    #model = timm.create_model('convformer_s18.sail_in22k', pretrained=True)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=0, global_pool='', drop_path_rate=0.1)
     #model = timm.create_model('vit_small_resnet26d_224', pretrained=False, num_classes=len(classes), drop_rate = 0., drop_path_rate = 0.1)
     
     # ijepa ft model instantiation
-    #model = timm.create_model('gernet_l', num_classes=0)
-    #model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
+    model = timm.create_model('gernet_l', num_classes=0)
+    model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_target_dict.pth'))
     for param in model.parameters():
         param.requires_grad = False
     model.reset_classifier(len(classes))
