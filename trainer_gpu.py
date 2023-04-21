@@ -89,11 +89,11 @@ FLAGS['num_workers'] = 10
 
 # training config
 
-FLAGS['num_epochs'] = 100
+FLAGS['num_epochs'] = 50
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 1e-4
+FLAGS['base_learning_rate'] = 1e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
@@ -102,7 +102,7 @@ FLAGS['weight_decay'] = 1e-5
 
 FLAGS['resume_epoch'] = 0
 
-FLAGS['finetune'] = True
+FLAGS['finetune'] = False
 
 FLAGS['image_size'] = 224
 FLAGS['progressiveImageSize'] = False
@@ -215,6 +215,8 @@ def modelSetup(classes):
     # ijepa ft model instantiation
     model = timm.create_model('gernet_l', num_classes=0)
     model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
+    for param in model.parameters():
+        param.requires_grad = False
     model.reset_classifier(len(classes))
     
     
@@ -306,9 +308,9 @@ def trainCycle(image_datasets, model):
     criterion = nn.CrossEntropyLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum = 0.9)
+    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum = 0.9)
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     if (FLAGS['resume_epoch'] > 0):
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
     #scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
