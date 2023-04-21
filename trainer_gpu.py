@@ -298,10 +298,10 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = SoftTargetCrossEntropy()
+    #criterion = SoftTargetCrossEntropy()
     #criterion = nn.MSELoss(reduction='sum')
     # CE with ASL (both gammas 0), eps controls label smoothing, pref sum reduction
-    #criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
+    criterion = AsymmetricLossSingleLabel(gamma_pos=0, gamma_neg=0, eps=0.0, reduction = 'mean')
     #criterion = nn.BCEWithLogitsLoss()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -423,17 +423,17 @@ def trainCycle(image_datasets, model):
                         #if phase == 'val':
                         
                         with torch.no_grad():
-                            #preds = torch.argmax(outputs, dim=1)
-                            preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
+                            preds = torch.argmax(outputs, dim=1)
+                            #preds = torch.softmax(outputs, dim=1) if phase == 'train' else torch.argmax(outputs, dim=1)
                             
                             
                             samples += len(images)
-                            #correct += sum(preds == tagBatch)
-                            correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
+                            correct += sum(preds == tagBatch)
+                            #correct += (preds * tagBatch).sum() if phase == 'train' else sum(preds == tagBatch)
                            
                         #print(tagBatch.shape)
-                        if phase == 'val':
-                            tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
+                        #if phase == 'val':
+                        #    tagBatch=torch.zeros([FLAGS['batch_size'], len(classes)]).scatter_(1, tags.view(FLAGS['batch_size'], 1), 1)
                         loss = criterion(outputs.to(device2), tagBatch.to(device2))
                         
                         #loss = criterion(outputs[0], outputs[1])
