@@ -84,19 +84,19 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 34
+FLAGS['num_workers'] = 16
 
 
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['batch_size'] = 768
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 3e-2
-FLAGS['base_batch_size'] = 16384
+FLAGS['base_learning_rate'] = 1e-3
+FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 0
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 1e-5
 
@@ -216,8 +216,8 @@ def modelSetup(classes):
     model = timm.create_model('gernet_l', num_classes=0)
     #model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_target_dict.pth'))
     model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
-    for param in model.parameters():
-        param.requires_grad = False
+    #for param in model.parameters():
+    #    param.requires_grad = False
     model.reset_classifier(len(classes))
     
     
@@ -347,9 +347,9 @@ def trainCycle(image_datasets, model):
         
         trainTransforms = transforms.Compose([
             transforms.Resize((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
-            #torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
+            torchvision.transforms.RandomResizedCrop((dynamicResizeDim, dynamicResizeDim), interpolation = FLAGS['interpolation']),
             transforms.RandomHorizontalFlip(),
-            #transforms.TrivialAugmentWide(),
+            transforms.TrivialAugmentWide(),
             #transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
             #transforms.RandAugment(),
             #CutoutPIL(cutout_factor=0.1),
