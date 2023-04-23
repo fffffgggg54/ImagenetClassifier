@@ -214,8 +214,8 @@ def modelSetup(classes):
     
     # ijepa ft model instantiation
     model = timm.create_model('gernet_l', num_classes=0)
-    #model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_target_dict.pth'))
-    model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
+    model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_target_dict.pth'))
+    #model.load_state_dict(torch.load(FLAGS['modelDir'] + 'final_context_dict.pth'))
     #for param in model.parameters():
     #    param.requires_grad = False
     model.reset_classifier(len(classes))
